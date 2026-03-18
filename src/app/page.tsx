@@ -52,7 +52,7 @@ export default async function HomePage() {
               href={hasClerk ? "/sign-up" : "/dashboard"}
               className="rounded-md bg-blue-600 px-8 py-3 text-sm font-semibold text-white hover:bg-blue-700 transition-colors"
             >
-              Start Free
+              Get Started
             </Link>
             <Link
               href={hasClerk ? "/sign-in" : "/games/new"}
@@ -61,7 +61,7 @@ export default async function HomePage() {
               Try the Wizard
             </Link>
           </div>
-          <p className="mt-4 text-xs text-gray-400">No credit card required. Free tier includes 1 project.</p>
+          <p className="mt-4 text-xs text-gray-400">The complete toolkit for iGaming game design teams.</p>
         </div>
       </section>
 
@@ -141,76 +141,26 @@ export default async function HomePage() {
         </div>
       </section>
 
-      {/* Pricing */}
+      {/* CTA */}
       <section className="border-t border-gray-100 bg-gray-50 py-20">
-        <div className="mx-auto max-w-6xl px-6">
-          <div className="text-center">
-            <h2 className="text-3xl font-bold text-gray-900">Simple pricing</h2>
-            <p className="mt-3 text-gray-600">Start free, upgrade when you need more</p>
-          </div>
-          <div className="mt-12 grid gap-6 sm:grid-cols-3">
-            {[
-              {
-                name: "Free",
-                price: "$0",
-                desc: "Perfect for exploring",
-                features: ["1 active project", "Basic math model", "500K simulation spins", "Markdown export"],
-                cta: "Start Free",
-                highlight: false,
-              },
-              {
-                name: "Pro",
-                price: "$299",
-                desc: "For game studios",
-                features: ["Unlimited projects", "Multi-RTP variants", "100M simulation spins", "All export formats", "AI concept generation"],
-                cta: "Start Pro Trial",
-                highlight: true,
-              },
-              {
-                name: "Enterprise",
-                price: "Custom",
-                desc: "For large studios",
-                features: ["Everything in Pro", "SSO / SAML", "Dedicated sim servers", "Custom integrations", "SLA & support"],
-                cta: "Contact Sales",
-                highlight: false,
-              },
-            ].map((plan) => (
-              <div
-                key={plan.name}
-                className={`rounded-lg border p-6 ${
-                  plan.highlight ? "border-blue-500 bg-white shadow-lg" : "border-gray-200 bg-white"
-                }`}
-              >
-                {plan.highlight && (
-                  <span className="mb-3 inline-block rounded-full bg-blue-100 px-3 py-0.5 text-xs font-medium text-blue-700">
-                    Most Popular
-                  </span>
-                )}
-                <h3 className="text-xl font-bold text-gray-900">{plan.name}</h3>
-                <p className="mt-1 text-sm text-gray-500">{plan.desc}</p>
-                <div className="mt-4">
-                  <span className="text-3xl font-bold text-gray-900">{plan.price}</span>
-                  {plan.price !== "Custom" && <span className="text-sm text-gray-500">/month</span>}
-                </div>
-                <ul className="mt-6 space-y-2">
-                  {plan.features.map((f) => (
-                    <li key={f} className="flex items-center gap-2 text-sm text-gray-600">
-                      <span className="text-green-500">&#10003;</span> {f}
-                    </li>
-                  ))}
-                </ul>
-                <Link
-                  href={hasClerk ? "/sign-up" : "/dashboard"}
-                  className={`mt-6 block w-full rounded-md px-4 py-2 text-center text-sm font-medium transition-colors ${
-                    plan.highlight
-                      ? "bg-blue-600 text-white hover:bg-blue-700"
-                      : "border border-gray-300 bg-white text-gray-700 hover:bg-gray-50"
-                  }`}
-                >
-                  {plan.cta}
-                </Link>
-              </div>
-            ))}
+        <div className="mx-auto max-w-6xl px-6 text-center">
+          <h2 className="text-3xl font-bold text-gray-900">Ready to design your next game?</h2>
+          <p className="mt-3 text-gray-600">
+            From initial concept to production-ready GDD — all in one workflow.
+          </p>
+          <div className="mt-8 flex justify-center gap-4">
+            <Link
+              href={hasClerk ? "/sign-up" : "/dashboard"}
+              className="rounded-md bg-blue-600 px-8 py-3 text-sm font-semibold text-white hover:bg-blue-700 transition-colors"
+            >
+              Get Started
+            </Link>
+            <a
+              href="mailto:hello@slotcraft.xyz"
+              className="rounded-md border border-gray-300 bg-white px-8 py-3 text-sm font-semibold text-gray-700 hover:bg-gray-50 transition-colors"
+            >
+              Contact Sales
+            </a>
           </div>
         </div>
       </section>

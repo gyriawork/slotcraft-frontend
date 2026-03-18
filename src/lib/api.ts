@@ -279,58 +279,6 @@ export const api = {
         body: JSON.stringify({ wizard_data: wizardData, audience, format }),
       }),
   },
-  billing: {
-    getSubscription: (userId: string) =>
-      request<{
-        plan: string;
-        status: string;
-        seats_included: number;
-        seats_used: number;
-        stripe_customer_id: string | null;
-        stripe_subscription_id: string | null;
-        trial_ends_at?: string | null;
-        current_period_end?: string | null;
-      }>(`/api/billing/subscription/${userId}`),
-    getUsage: (userId: string) =>
-      request<{
-        browser_sim_spins: number;
-        server_sim_spins: number;
-        ai_review_calls: number;
-        export_count: number;
-      }>(`/api/billing/usage/${userId}`),
-    getLimits: (userId: string) =>
-      request<{
-        plan: string;
-        limits: Record<string, number | string[]>;
-        usage: Record<string, number>;
-        warnings: Record<string, boolean>;
-      }>(`/api/billing/limits/${userId}`),
-    checkLimit: (userId: string, type: string, amount: number) =>
-      request<{
-        allowed: boolean;
-        message?: string;
-        warning?: string;
-        upgrade_required?: boolean;
-      }>(`/api/billing/check-limit/${userId}`, {
-        method: "POST",
-        body: JSON.stringify({ type, amount }),
-      }),
-    createCheckout: (userId: string, plan: string, annual?: boolean) =>
-      request<{ url: string }>("/api/billing/create-checkout", {
-        method: "POST",
-        body: JSON.stringify({ userId, plan, annual }),
-      }),
-    cancel: (userId: string) =>
-      request<{ status: string }>("/api/billing/cancel", {
-        method: "POST",
-        body: JSON.stringify({ userId }),
-      }),
-    createPortal: (userId: string) =>
-      request<{ url: string }>("/api/billing/portal", {
-        method: "POST",
-        body: JSON.stringify({ userId }),
-      }),
-  },
   simulation: {
     run: (config: unknown, spinCount: number, seed: number) =>
       request<{
