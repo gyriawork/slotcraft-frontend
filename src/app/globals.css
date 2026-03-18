@@ -1,26 +1,236 @@
 @import "tailwindcss";
 
 :root {
-  --background: #ffffff;
-  --foreground: #171717;
+  /* Dark theme palette — from prototype */
+  --bg: #0f0f12;
+  --bg2: #17171c;
+  --bg3: #1e1e24;
+  --bg4: #26262e;
+  --bg5: #2e2e38;
+  --surface: #1a1a20;
+  --surface2: #222229;
+  --border: #2a2a32;
+  --border-h: #3a3a44;
+  --text: #f0f0f5;
+  --text2: #9d9daa;
+  --text3: #6a6a78;
+  --accent: #7c6bf5;
+  --accent2: #6558e0;
+  --accent-soft: rgba(124, 107, 245, 0.12);
+  --accent-border: rgba(124, 107, 245, 0.3);
+  --green: #3dd68c;
+  --green-soft: rgba(61, 214, 140, 0.1);
+  --green-border: rgba(61, 214, 140, 0.3);
+  --amber: #f0b040;
+  --amber-soft: rgba(240, 176, 64, 0.1);
+  --amber-border: rgba(240, 176, 64, 0.3);
+  --red: #ef6060;
+  --red-soft: rgba(239, 96, 96, 0.1);
+  --blue: #50a0f0;
+  --blue-soft: rgba(80, 160, 240, 0.1);
+  --sidebar-w: 240px;
+  --r: 10px;
+  --r-sm: 6px;
+  --r-lg: 14px;
 }
 
 @theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
+  --color-background: var(--bg);
+  --color-foreground: var(--text);
+  --font-sans: 'DM Sans', system-ui, sans-serif;
   --font-mono: var(--font-geist-mono);
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
+body {
+  font-family: 'DM Sans', system-ui, sans-serif;
+  background: var(--bg);
+  color: var(--text);
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
 }
 
-body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+/* Custom scrollbar */
+::-webkit-scrollbar { width: 4px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb { background: var(--border); border-radius: 2px; }
+
+/* Selection */
+::selection { background: var(--accent-soft); color: var(--accent); }
+
+/* Focus rings */
+*:focus-visible {
+  outline: 1.5px solid var(--accent);
+  outline-offset: 1px;
 }
+
+/* Form elements base */
+input, select, textarea {
+  font-family: 'DM Sans', system-ui, sans-serif;
+}
+
+/* Transition defaults */
+a, button { transition: all 0.12s ease; }
+
+/* ============================================================
+   DARK THEME OVERRIDES FOR TAILWIND UTILITY CLASSES
+   These remap the light-theme Tailwind classes used in existing
+   components (wizard steps, library, settings, etc.) to our
+   dark palette. This way all pages get the dark treatment
+   without rewriting every component.
+   ============================================================ */
+
+/* --- Backgrounds --- */
+.bg-white { background-color: var(--surface) !important; }
+.bg-gray-50 { background-color: var(--bg) !important; }
+.bg-gray-100 { background-color: var(--bg3) !important; }
+.bg-gray-200 { background-color: var(--bg4) !important; }
+
+/* Status colors — adapted */
+.bg-green-100 { background-color: var(--green-soft) !important; }
+.bg-green-50 { background-color: var(--green-soft) !important; }
+.bg-blue-100 { background-color: var(--blue-soft) !important; }
+.bg-blue-50 { background-color: var(--accent-soft) !important; }
+.bg-red-50 { background-color: var(--red-soft) !important; }
+.bg-red-100 { background-color: var(--red-soft) !important; }
+.bg-amber-50 { background-color: var(--amber-soft) !important; }
+.bg-amber-100 { background-color: var(--amber-soft) !important; }
+.bg-purple-100 { background-color: rgba(139, 92, 246, 0.12) !important; }
+.bg-orange-50 { background-color: var(--amber-soft) !important; }
+.bg-indigo-50 { background-color: var(--accent-soft) !important; }
+
+/* Primary action buttons */
+.bg-blue-600 { background-color: var(--accent) !important; }
+.bg-blue-700 { background-color: var(--accent2) !important; }
+.hover\:bg-blue-700:hover { background-color: var(--accent2) !important; }
+.hover\:bg-gray-50:hover { background-color: var(--bg3) !important; }
+.hover\:bg-gray-100:hover { background-color: var(--bg4) !important; }
+
+/* --- Borders --- */
+.border-gray-200 { border-color: var(--border) !important; }
+.border-gray-300 { border-color: var(--border) !important; }
+.border-gray-100 { border-color: var(--border) !important; }
+.border-blue-200 { border-color: var(--accent-border) !important; }
+.border-blue-300 { border-color: var(--accent-border) !important; }
+.border-blue-500 { border-color: var(--accent) !important; }
+.border-blue-600 { border-color: var(--accent) !important; }
+.border-green-200 { border-color: var(--green-border) !important; }
+.border-amber-200 { border-color: var(--amber-border) !important; }
+.border-orange-200 { border-color: var(--amber-border) !important; }
+.border-red-200 { border-color: rgba(239, 96, 96, 0.3) !important; }
+.border-indigo-200 { border-color: var(--accent-border) !important; }
+.border-dashed { border-style: dashed; border-color: var(--border) !important; }
+.divide-gray-200 > :not(:last-child) { border-color: var(--border) !important; }
+.divide-gray-100 > :not(:last-child) { border-color: var(--border) !important; }
+
+/* Focus */
+.focus\:border-blue-400:focus { border-color: var(--accent) !important; }
+.focus\:ring-blue-400:focus { --tw-ring-color: var(--accent) !important; }
+
+/* --- Text colors --- */
+.text-gray-900 { color: var(--text) !important; }
+.text-gray-800 { color: var(--text) !important; }
+.text-gray-700 { color: var(--text2) !important; }
+.text-gray-600 { color: var(--text2) !important; }
+.text-gray-500 { color: var(--text3) !important; }
+.text-gray-400 { color: var(--text3) !important; }
+.text-gray-300 { color: var(--text3) !important; }
+.text-blue-600 { color: var(--accent) !important; }
+.text-blue-700 { color: var(--accent) !important; }
+.text-blue-900 { color: var(--accent) !important; }
+.text-green-600 { color: var(--green) !important; }
+.text-green-700 { color: var(--green) !important; }
+.text-green-500 { color: var(--green) !important; }
+.text-red-500 { color: var(--red) !important; }
+.text-red-600 { color: var(--red) !important; }
+.text-red-800 { color: var(--red) !important; }
+.text-amber-600 { color: var(--amber) !important; }
+.text-amber-700 { color: var(--amber) !important; }
+.text-amber-800 { color: var(--amber) !important; }
+.text-orange-800 { color: var(--amber) !important; }
+.text-orange-700 { color: var(--amber) !important; }
+.text-purple-700 { color: #a78bfa !important; }
+.text-indigo-900 { color: var(--accent) !important; }
+
+/* Hover text */
+.hover\:text-gray-900:hover { color: var(--text) !important; }
+.hover\:text-gray-700:hover { color: var(--text) !important; }
+.hover\:text-blue-600:hover { color: var(--accent) !important; }
+.hover\:text-blue-700:hover { color: var(--accent) !important; }
+.group:hover .group-hover\:text-blue-600 { color: var(--accent) !important; }
+
+/* White text stays white */
+.text-white { color: #ffffff !important; }
+
+/* --- Progress bars --- */
+.bg-blue-500 { background-color: var(--accent) !important; }
+.bg-blue-400 { background-color: var(--accent) !important; }
+.bg-green-500 { background-color: var(--green) !important; }
+.bg-green-300 { background-color: var(--green) !important; }
+.bg-amber-500 { background-color: var(--amber) !important; }
+.bg-red-500 { background-color: var(--red) !important; }
+
+/* --- Specific overrides for components --- */
+
+/* Spinner */
+.border-blue-600 { border-color: var(--accent) !important; }
+.border-t-transparent { border-top-color: transparent !important; }
+
+/* Hover shadow on dark is subtle glow */
+.hover\:shadow-md:hover {
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3) !important;
+}
+
+/* Range input */
+input[type="range"] {
+  accent-color: var(--accent);
+}
+
+/* Placeholder text */
+::placeholder { color: var(--text3) !important; }
+
+/* Tables */
+thead .bg-gray-50,
+.bg-gray-50 th {
+  background-color: var(--bg3) !important;
+}
+
+/* --- Additional dark theme overrides (Phase 1 audit) --- */
+
+/* Backgrounds */
+.bg-purple-50 { background-color: rgba(139, 92, 246, 0.08) !important; }
+.bg-yellow-100 { background-color: var(--amber-soft) !important; }
+.bg-orange-100 { background-color: var(--amber-soft) !important; }
+.hover\:bg-purple-100:hover { background-color: rgba(139, 92, 246, 0.15) !important; }
+.hover\:bg-red-50:hover { background-color: var(--red-soft) !important; }
+.hover\:bg-red-100:hover { background-color: var(--red-soft) !important; }
+.hover\:bg-green-50:hover { background-color: var(--green-soft) !important; }
+
+/* Borders */
+.border-purple-200 { border-color: rgba(139, 92, 246, 0.3) !important; }
+.border-purple-300 { border-color: rgba(139, 92, 246, 0.3) !important; }
+.border-yellow-200 { border-color: var(--amber-border) !important; }
+
+/* Text */
+.text-yellow-700 { color: var(--amber) !important; }
+.text-yellow-800 { color: var(--amber) !important; }
+.text-green-800 { color: var(--green) !important; }
+.text-orange-600 { color: var(--amber) !important; }
+.text-purple-600 { color: #a78bfa !important; }
+.text-purple-800 { color: #a78bfa !important; }
+.text-indigo-600 { color: var(--accent) !important; }
+.text-indigo-700 { color: var(--accent) !important; }
+
+/* Modal backdrop — 60% opacity for dark theme */
+.bg-black\/40 { background-color: rgba(0, 0, 0, 0.6) !important; }
+.bg-black\/50 { background-color: rgba(0, 0, 0, 0.6) !important; }
+
+/* Ring colors */
+.ring-blue-500 { --tw-ring-color: var(--accent) !important; }
+.ring-green-500 { --tw-ring-color: var(--green) !important; }
+.ring-red-500 { --tw-ring-color: var(--red) !important; }
+.focus\:ring-blue-500:focus { --tw-ring-color: var(--accent) !important; }
+
+/* Shadow on dark bg */
+.shadow-sm { box-shadow: 0 1px 3px rgba(0, 0, 0, 0.3) !important; }
+.shadow-lg { box-shadow: 0 4px 16px rgba(0, 0, 0, 0.4) !important; }
+.shadow-xl { box-shadow: 0 8px 24px rgba(0, 0, 0, 0.5) !important; }
