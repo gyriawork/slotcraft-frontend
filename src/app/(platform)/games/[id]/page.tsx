@@ -143,11 +143,11 @@ export default function ProjectWizardPage() {
           {currentStep === 2 && <Step2Volatility data={step2 ?? undefined} onUpdate={setStep2} onBack={() => setCurrentStep(1)} />}
           {currentStep === 3 && <Step3Features data={step3 ?? undefined} onUpdate={setStep3} onBack={() => setCurrentStep(2)} markets={step1?.markets} marketConstraints={step1?.market_constraints} />}
           {currentStep === 4 && <Step4Concept data={step4 ?? undefined} onUpdate={setStep4} onBack={() => setCurrentStep(3)} gameContext={{ game_type: step1?.game_type, grid: step1?.grid, volatility: step2?.volatility, target_rtp: step2?.target_rtp, features: step3?.features?.map((f) => f.type) }} />}
-          {currentStep === 5 && <Step5Math step1={step1} step2={step2} step3={step3} step4={step4} data={step5 ?? undefined} onUpdate={setStep5} onBack={() => setCurrentStep(4)} />}
-          {currentStep === 6 && <Step6Simulation step1={step1} step2={step2} step3={step3} step5={step5} data={step6 ?? undefined} onUpdate={setStep6} onBack={() => setCurrentStep(5)} />}
-          {currentStep === 7 && <Step7Prototype step1={step1} step2={step2} step3={step3} step5={step5} data={step7 ?? undefined} onUpdate={setStep7} onBack={() => setCurrentStep(6)} />}
-          {currentStep === 8 && <Step8Rules step1={step1} step2={step2} step3={step3} step4={step4} step5={step5} step6={step6} data={step8 ?? undefined} onUpdate={setStep8} onBack={() => setCurrentStep(7)} />}
-          {currentStep === 9 && <Step9Export step1={step1} step2={step2} step3={step3} step4={step4} step5={step5} step6={step6} step7={step7} data={step9 ?? undefined} onUpdate={setStep9} onBack={() => setCurrentStep(8)} />}
+          {currentStep === 5 && step1 && <Step5Math step1={step1} step2={step2} step3={step3} step4={step4} data={step5 ?? undefined} onUpdate={setStep5} onBack={() => setCurrentStep(4)} />}
+          {currentStep === 6 && step1 && <Step6Simulation step1={step1} step2={step2} step3={step3} step5={step5} data={step6 ?? undefined} onUpdate={setStep6} onBack={() => setCurrentStep(5)} />}
+          {currentStep === 7 && step1 && <Step7Prototype step1={step1} step2={step2} step3={step3} step5={step5} data={step7 ?? undefined} onUpdate={setStep7} onBack={() => setCurrentStep(6)} />}
+          {currentStep === 8 && step1 && <Step8Rules step1={step1} step2={step2} step3={step3} step4={step4} step5={step5} step6={step6} data={step8 ?? undefined} onUpdate={setStep8} onBack={() => setCurrentStep(7)} />}
+          {currentStep === 9 && step1 && <Step9Export step1={step1} step2={step2} step3={step3} step4={step4} step5={step5} step6={step6} step7={step7} data={step9 ?? undefined} onUpdate={setStep9} onBack={() => setCurrentStep(8)} />}
         </div>
       </div>
 

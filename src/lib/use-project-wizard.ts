@@ -6,40 +6,47 @@ import { useWizardStore } from "./wizard-store";
 
 /**
  * Hook that syncs wizard store state with a backend project's step_data.
- * - On mount: loads project step_data into the wizard store.
+ * - On mount (or projectId change): loads project step_data into the wizard store.
  * - On step completion: saves step_data back to the project.
+ *
+ * IMPORTANT: hydration is done atomically via Zustand setState to avoid
+ * intermediate renders where step1 is null (which crashes Step5-9 components).
  */
 export function useProjectWizard(projectId: string) {
   const [project, setProject] = useState<Project | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [saving, setSaving] = useState(false);
-  const loadedRef = useRef(false);
+  const lastLoadedId = useRef<string | null>(null);
 
-  const store = useWizardStore();
-
-  // Load project + hydrate wizard store
+  // Load project + hydrate wizard store (re-runs when projectId changes)
   useEffect(() => {
-    if (loadedRef.current) return;
-    loadedRef.current = true;
+    if (lastLoadedId.current === projectId) return;
+    lastLoadedId.current = projectId;
+    setLoading(true);
 
     (async () => {
       try {
         const proj = await api.projects.get(projectId);
         setProject(proj);
 
-        // Hydrate wizard store from step_data
+        // Hydrate wizard store ATOMICALLY — one setState call to avoid
+        // intermediate renders where step data is null
         const sd = proj.step_data ?? {};
-        if (sd.step1) store.setStep1(sd.step1 as Parameters<typeof store.setStep1>[0]);
-        if (sd.step2) store.setStep2(sd.step2 as Parameters<typeof store.setStep2>[0]);
-        if (sd.step3) store.setStep3(sd.step3 as Parameters<typeof store.setStep3>[0]);
-        if (sd.step4) store.setStep4(sd.step4 as Parameters<typeof store.setStep4>[0]);
-        if (sd.step5) store.setStep5(sd.step5 as Parameters<typeof store.setStep5>[0]);
-        if (sd.step6) store.setStep6(sd.step6 as Parameters<typeof store.setStep6>[0]);
-        if (sd.step7) store.setStep7(sd.step7 as Parameters<typeof store.setStep7>[0]);
-        if (sd.step8) store.setStep8(sd.step8 as Parameters<typeof store.setStep8>[0]);
-        if (sd.step9) store.setStep9(sd.step9 as Parameters<typeof store.setStep9>[0]);
-        if (typeof sd.currentStep === "number") store.setCurrentStep(sd.currentStep as number);
+        useWizardStore.setState({
+          currentStep: typeof sd.currentStep === "number" ? (sd.currentStep as number) : 1,
+          completedSteps: (sd.completedSteps as number[]) ?? [],
+          stepValidity: (sd.stepValidity as Record<number, string>) ?? {},
+          step1: (sd.step1 as ReturnType<typeof useWizardStore.getState>["step1"]) ?? null,
+          step2: (sd.step2 as ReturnType<typeof useWizardStore.getState>["step2"]) ?? null,
+          step3: (sd.step3 as ReturnType<typeof useWizardStore.getState>["step3"]) ?? null,
+          step4: (sd.step4 as ReturnType<typeof useWizardStore.getState>["step4"]) ?? null,
+          step5: (sd.step5 as ReturnType<typeof useWizardStore.getState>["step5"]) ?? null,
+          step6: (sd.step6 as ReturnType<typeof useWizardStore.getState>["step6"]) ?? null,
+          step7: (sd.step7 as ReturnType<typeof useWizardStore.getState>["step7"]) ?? null,
+          step8: (sd.step8 as ReturnType<typeof useWizardStore.getState>["step8"]) ?? null,
+          step9: (sd.step9 as ReturnType<typeof useWizardStore.getState>["step9"]) ?? null,
+        });
 
         setError(null);
       } catch (e) {

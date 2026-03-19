@@ -27,6 +27,8 @@ export interface RoadmapGame {
   wizardStep: string;
   /** Source: "library", "project", or "sample" */
   source: "library" | "project" | "sample";
+  /** Year the game's dates belong to */
+  year: number;
 }
 
 /* ─── Converters: real data → RoadmapGame ─── */
@@ -116,6 +118,7 @@ export function libraryGameToRoadmap(game: LibraryGame): RoadmapGame {
     marketingDate,
     wizardStep: "\u2014",
     source: "library",
+    year: release ? release.getFullYear() : created.getFullYear(),
   };
 }
 
@@ -168,6 +171,7 @@ export function projectToRoadmap(project: Project): RoadmapGame {
     marketingDate,
     wizardStep: `${completedSteps}/${totalSteps}`,
     source: "project",
+    year: techD.getFullYear(),
   };
 }
 
@@ -248,18 +252,18 @@ export const TEAM_CONFIG: Record<string, { bg: string; color: string }> = {
 };
 
 export const SAMPLE_ROADMAP_GAMES: RoadmapGame[] = [
-  { name: "Tempest of Quetzalcoatl", type: "slot", team: "Alpha", status: "released", rtp: "96.0%", volatility: "Med-high", devStartMonth: 0, devEndMonth: 2, techReleaseMonth: 2, marketingReleaseMonth: 2.5, techDate: "Feb 15", marketingDate: "Mar 1", wizardStep: "9/9", source: "sample" },
-  { name: "Love & Luck Joker", type: "slot", team: "Beta", status: "released", rtp: "96.0%", volatility: "High", devStartMonth: 0.5, devEndMonth: 2.5, techReleaseMonth: 2.5, marketingReleaseMonth: 3, techDate: "Mar 1", marketingDate: "Mar 16", wizardStep: "9/9", source: "sample" },
-  { name: "Neon Samurai X", type: "slot", team: "Alpha", status: "released", rtp: "96.5%", volatility: "High", devStartMonth: 1, devEndMonth: 3.2, techReleaseMonth: 3, marketingReleaseMonth: 3.5, techDate: "Mar 20", marketingDate: "Apr 5", wizardStep: "9/9", source: "sample" },
-  { name: "Rocket Blitz", type: "crash", team: "Gamma", status: "dev", rtp: "97.0%", volatility: "\u2014", devStartMonth: 2, devEndMonth: 4.5, techReleaseMonth: 4.5, marketingReleaseMonth: 5, techDate: "May 1", marketingDate: "May 15", wizardStep: "5/9", source: "sample" },
-  { name: "Dragon Palace Megaways", type: "slot", team: "Beta", status: "dev", rtp: "96.2%", volatility: "Ultra", devStartMonth: 2.5, devEndMonth: 5.5, techReleaseMonth: 5.5, marketingReleaseMonth: 6, techDate: "Jun 1", marketingDate: "Jun 15", wizardStep: "4/9", source: "sample" },
-  { name: "Lightning Blackjack Pro", type: "table", team: "Gamma", status: "dev", rtp: "99.1%", volatility: "Low", devStartMonth: 3, devEndMonth: 5, techReleaseMonth: 5, marketingReleaseMonth: 5.5, techDate: "May 15", marketingDate: "Jun 1", wizardStep: "3/9", source: "sample" },
-  { name: "Crash Royale", type: "crash", team: "Gamma", status: "dev", rtp: "97.0%", volatility: "\u2014", devStartMonth: 4, devEndMonth: 6.5, techReleaseMonth: 6.5, marketingReleaseMonth: 7, techDate: "Jul 1", marketingDate: "Jul 15", wizardStep: "2/9", source: "sample" },
-  { name: "Aztec Gold Rush", type: "slot", team: "Alpha", status: "dev", rtp: "95.5%", volatility: "Med", devStartMonth: 3.5, devEndMonth: 6, techReleaseMonth: 6, marketingReleaseMonth: 6.5, techDate: "Jun 15", marketingDate: "Jul 1", wizardStep: "3/9", source: "sample" },
-  { name: "Fortune Tiger 88", type: "slot", team: "Beta", status: "dev", rtp: "96.0%", volatility: "Med-high", devStartMonth: 5, devEndMonth: 7.5, techReleaseMonth: 7.5, marketingReleaseMonth: 8, techDate: "Aug 1", marketingDate: "Aug 15", wizardStep: "1/9", source: "sample" },
-  { name: "European Roulette VIP", type: "table", team: "Gamma", status: "concept", rtp: "97.3%", volatility: "Low", devStartMonth: 7, devEndMonth: 9, techReleaseMonth: 9, marketingReleaseMonth: 9.5, techDate: "Oct 1", marketingDate: "Oct 15", wizardStep: "0/9", source: "sample" },
-  { name: "Candy Cascade", type: "slot", team: "Alpha", status: "concept", rtp: "96.0%", volatility: "Med", devStartMonth: 7, devEndMonth: 9.5, techReleaseMonth: 9.5, marketingReleaseMonth: 10, techDate: "Oct 15", marketingDate: "Nov 1", wizardStep: "0/9", source: "sample" },
-  { name: "Turbo Crash Pro", type: "crash", team: "Gamma", status: "concept", rtp: "96.0%", volatility: "\u2014", devStartMonth: 8, devEndMonth: 10, techReleaseMonth: 10, marketingReleaseMonth: 10.5, techDate: "Nov 1", marketingDate: "Nov 15", wizardStep: "0/9", source: "sample" },
-  { name: "Wild West Heist", type: "slot", team: "Beta", status: "concept", rtp: "96.5%", volatility: "High", devStartMonth: 9, devEndMonth: 11.5, techReleaseMonth: 11.5, marketingReleaseMonth: 12, techDate: "Dec 1", marketingDate: "Dec 15", wizardStep: "0/9", source: "sample" },
-  { name: "Mystic Gems Cluster", type: "slot", team: "Alpha", status: "concept", rtp: "96.0%", volatility: "Med-high", devStartMonth: 10, devEndMonth: 12, techReleaseMonth: 12, marketingReleaseMonth: 12.5, techDate: "Dec 28", marketingDate: "Jan 10, 2027", wizardStep: "0/9", source: "sample" },
+  { name: "Tempest of Quetzalcoatl", type: "slot", team: "Alpha", status: "released", rtp: "96.0%", volatility: "Med-high", devStartMonth: 0, devEndMonth: 2, techReleaseMonth: 2, marketingReleaseMonth: 2.5, techDate: "Feb 15", marketingDate: "Mar 1", wizardStep: "9/9", source: "sample", year: 2026 },
+  { name: "Love & Luck Joker", type: "slot", team: "Beta", status: "released", rtp: "96.0%", volatility: "High", devStartMonth: 0.5, devEndMonth: 2.5, techReleaseMonth: 2.5, marketingReleaseMonth: 3, techDate: "Mar 1", marketingDate: "Mar 16", wizardStep: "9/9", source: "sample", year: 2026 },
+  { name: "Neon Samurai X", type: "slot", team: "Alpha", status: "released", rtp: "96.5%", volatility: "High", devStartMonth: 1, devEndMonth: 3.2, techReleaseMonth: 3, marketingReleaseMonth: 3.5, techDate: "Mar 20", marketingDate: "Apr 5", wizardStep: "9/9", source: "sample", year: 2026 },
+  { name: "Rocket Blitz", type: "crash", team: "Gamma", status: "dev", rtp: "97.0%", volatility: "\u2014", devStartMonth: 2, devEndMonth: 4.5, techReleaseMonth: 4.5, marketingReleaseMonth: 5, techDate: "May 1", marketingDate: "May 15", wizardStep: "5/9", source: "sample", year: 2026 },
+  { name: "Dragon Palace Megaways", type: "slot", team: "Beta", status: "dev", rtp: "96.2%", volatility: "Ultra", devStartMonth: 2.5, devEndMonth: 5.5, techReleaseMonth: 5.5, marketingReleaseMonth: 6, techDate: "Jun 1", marketingDate: "Jun 15", wizardStep: "4/9", source: "sample", year: 2026 },
+  { name: "Lightning Blackjack Pro", type: "table", team: "Gamma", status: "dev", rtp: "99.1%", volatility: "Low", devStartMonth: 3, devEndMonth: 5, techReleaseMonth: 5, marketingReleaseMonth: 5.5, techDate: "May 15", marketingDate: "Jun 1", wizardStep: "3/9", source: "sample", year: 2026 },
+  { name: "Crash Royale", type: "crash", team: "Gamma", status: "dev", rtp: "97.0%", volatility: "\u2014", devStartMonth: 4, devEndMonth: 6.5, techReleaseMonth: 6.5, marketingReleaseMonth: 7, techDate: "Jul 1", marketingDate: "Jul 15", wizardStep: "2/9", source: "sample", year: 2026 },
+  { name: "Aztec Gold Rush", type: "slot", team: "Alpha", status: "dev", rtp: "95.5%", volatility: "Med", devStartMonth: 3.5, devEndMonth: 6, techReleaseMonth: 6, marketingReleaseMonth: 6.5, techDate: "Jun 15", marketingDate: "Jul 1", wizardStep: "3/9", source: "sample", year: 2026 },
+  { name: "Fortune Tiger 88", type: "slot", team: "Beta", status: "dev", rtp: "96.0%", volatility: "Med-high", devStartMonth: 5, devEndMonth: 7.5, techReleaseMonth: 7.5, marketingReleaseMonth: 8, techDate: "Aug 1", marketingDate: "Aug 15", wizardStep: "1/9", source: "sample", year: 2026 },
+  { name: "European Roulette VIP", type: "table", team: "Gamma", status: "concept", rtp: "97.3%", volatility: "Low", devStartMonth: 7, devEndMonth: 9, techReleaseMonth: 9, marketingReleaseMonth: 9.5, techDate: "Oct 1", marketingDate: "Oct 15", wizardStep: "0/9", source: "sample", year: 2026 },
+  { name: "Candy Cascade", type: "slot", team: "Alpha", status: "concept", rtp: "96.0%", volatility: "Med", devStartMonth: 7, devEndMonth: 9.5, techReleaseMonth: 9.5, marketingReleaseMonth: 10, techDate: "Oct 15", marketingDate: "Nov 1", wizardStep: "0/9", source: "sample", year: 2026 },
+  { name: "Turbo Crash Pro", type: "crash", team: "Gamma", status: "concept", rtp: "96.0%", volatility: "\u2014", devStartMonth: 8, devEndMonth: 10, techReleaseMonth: 10, marketingReleaseMonth: 10.5, techDate: "Nov 1", marketingDate: "Nov 15", wizardStep: "0/9", source: "sample", year: 2026 },
+  { name: "Wild West Heist", type: "slot", team: "Beta", status: "concept", rtp: "96.5%", volatility: "High", devStartMonth: 9, devEndMonth: 11.5, techReleaseMonth: 11.5, marketingReleaseMonth: 12, techDate: "Dec 1", marketingDate: "Dec 15", wizardStep: "0/9", source: "sample", year: 2026 },
+  { name: "Mystic Gems Cluster", type: "slot", team: "Alpha", status: "concept", rtp: "96.0%", volatility: "Med-high", devStartMonth: 10, devEndMonth: 12, techReleaseMonth: 12, marketingReleaseMonth: 12.5, techDate: "Dec 28", marketingDate: "Jan 10, 2027", wizardStep: "0/9", source: "sample", year: 2026 },
 ];

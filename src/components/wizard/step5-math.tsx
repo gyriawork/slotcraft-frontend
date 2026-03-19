@@ -107,18 +107,24 @@ function defaultReelStrips(reels: number, stopsPerReel: number): Record<string, 
 }
 
 /** Generate initial Step5Data from Steps 1-3 */
-function generateInitialData(step1: Step1Data, step2: Step2Data): Step5Data {
+function generateInitialData(step1: Step1Data, step2: Step2Data, step3?: { features?: Array<{ type?: string; variant?: string }> } | null): Step5Data {
   const targetTenths = Math.round(step2.target_rtp * 10); // 96.0 → 960
   const stopsPerReel = 60;
   const reels = step1.grid.reels;
   const paytable = defaultPaytable(step2.volatility);
   const reelStrips = defaultReelStrips(reels, stopsPerReel);
 
-  // Default RTP budget split (integer tenths)
+  // Check which features are selected in Step 3
+  const featureVariants = step3?.features?.map(f => (f.variant ?? f.type ?? "").toLowerCase()) ?? [];
+  const hasFS = featureVariants.some(f => f.includes("free") || f.includes("fs") || f.includes("spin"));
+  const hasAccum = featureVariants.some(f => f.includes("accum") || f.includes("cascade") || f.includes("cluster"));
+  const hasWild = featureVariants.some(f => f.includes("wild")) || true; // wild always present
+
+  // RTP budget split based on selected features
   const budget: RtpBudget = {
-    base_wins: Math.round(targetTenths * 0.56),
-    wild_substitution: Math.round(targetTenths * 0.085),
-    free_spins: Math.round(targetTenths * 0.10),
+    base_wins: Math.round(targetTenths * (hasFS && hasAccum ? 0.50 : hasFS ? 0.52 : hasAccum ? 0.54 : 0.56)),
+    wild_substitution: Math.round(targetTenths * (hasWild ? 0.085 : 0.04)),
+    free_spins: Math.round(targetTenths * (hasFS ? 0.15 : 0)),
     accumulator: 0, // derived
   };
   // Derive last segment for exact total
@@ -217,7 +223,7 @@ export function Step5Math({ step1, step2, step3, step4, data, onUpdate, onBack }
       setSubStep(2);
     } catch {
       // Fallback to local generation if backend unavailable
-      const initial = generateInitialData(step1, step2);
+      const initial = generateInitialData(step1, step2, step3);
       setLocalData(initial);
       setGenerated(true);
       setSubStep(2);
@@ -415,6 +421,18 @@ export function Step5Math({ step1, step2, step3, step4, data, onUpdate, onBack }
                     .map((v) => `${v}%`)
                     .join(", ")}
                 </p>
+              </div>
+            )}
+            {step3?.features && step3.features.length > 0 && (
+              <div className="mt-4 rounded-md bg-gray-50 p-3">
+                <span className="text-xs text-gray-500">Features (from Step 3)</span>
+                <div className="mt-1.5 flex flex-wrap gap-1.5">
+                  {step3.features.map((f, i) => (
+                    <span key={i} className="rounded-full bg-purple-100 px-2.5 py-0.5 text-xs font-medium text-purple-700">
+                      {f.variant ?? f.type ?? "Feature"}
+                    </span>
+                  ))}
+                </div>
               </div>
             )}
           </div>

@@ -1,6 +1,7 @@
 "use client";
 
-import { useCallback, useMemo, useState } from "react";
+import { useCallback, useMemo, useState, useRef } from "react";
+import { api } from "@/lib/api";
 import type {
   Step1Data,
   Step2Data,
@@ -374,21 +375,24 @@ export function Step8Rules({
             <button
               className="rounded-md px-3.5 py-[7px] text-[12px] font-medium cursor-pointer"
               style={{ background: "var(--accent-soft)", border: "0.5px solid var(--accent-border)", color: "var(--accent)" }}
-              onClick={() => {
-                // Simulate AI translation (placeholder — in production calls Claude API)
+              onClick={async () => {
                 const sourceTxt = template.content || translations[template.source_lang]?.content || "";
                 if (!sourceTxt) return;
+                const missingLangs = allLangs.filter((l) => translations[l]?.status === "empty");
                 const newTranslations = { ...translations };
-                for (const lang of allLangs) {
-                  if (newTranslations[lang]?.status === "empty") {
-                    newTranslations[lang] = {
-                      status: "translated",
-                      content: `[AI ${LANGUAGE_NAMES[lang] ?? lang}] ${sourceTxt}`,
-                      updated_at: new Date().toISOString(),
-                    };
-                  }
+                for (const lang of missingLangs) {
+                  newTranslations[lang] = { status: "translated", content: "Translating...", updated_at: new Date().toISOString() };
                 }
-                setTranslations(newTranslations);
+                setTranslations({ ...newTranslations });
+                for (const lang of missingLangs) {
+                  try {
+                    const result = await api.ai.translate(sourceTxt, template.source_lang, lang);
+                    newTranslations[lang] = { status: "translated", content: result.translated, updated_at: new Date().toISOString() };
+                  } catch {
+                    newTranslations[lang] = { status: "translated", content: `[${lang.toUpperCase()}] ${sourceTxt}`, updated_at: new Date().toISOString() };
+                  }
+                  setTranslations({ ...newTranslations });
+                }
               }}
             >
               AI Translate Missing ({emptyCount})
@@ -504,11 +508,15 @@ export function Step8Rules({
                     <button
                       className="rounded px-2.5 py-1 text-[11px] font-medium cursor-pointer"
                       style={{ background: "var(--accent-soft)", color: "var(--accent)" }}
-                      onClick={() => {
-                        // AI translate placeholder
+                      onClick={async () => {
                         const src = template.content || translations[template.source_lang]?.content || "";
-                        if (src) {
-                          setTranslationDraft(`[AI ${LANGUAGE_NAMES[selectedLang] ?? selectedLang}] ${src}`);
+                        if (!src) return;
+                        setTranslationDraft("Translating...");
+                        try {
+                          const result = await api.ai.translate(src, template.source_lang, selectedLang);
+                          setTranslationDraft(result.translated);
+                        } catch {
+                          setTranslationDraft(`[${selectedLang.toUpperCase()}] ${src}`);
                         }
                       }}
                     >
@@ -640,19 +648,19 @@ export function Step8Rules({
           <div className="rounded-lg border overflow-hidden" style={{ borderColor: "var(--border)" }}>
             {/* Table header */}
             <div
-              className="grid grid-cols-[1fr_1fr_auto] gap-3 px-4 py-2.5 text-[10px] font-semibold uppercase tracking-widest"
+              className="grid grid-cols-[200px_1fr_200px] gap-4 px-4 py-2.5 text-[10px] font-semibold uppercase tracking-widest"
               style={{ background: "var(--bg3)", color: "var(--text3)", borderBottom: "1px solid var(--border)" }}
             >
               <span>Variable</span>
-              <span>Resolved Value</span>
-              <span>Source</span>
+              <span className="text-center">Resolved Value</span>
+              <span className="text-right">Source</span>
             </div>
 
             {/* Rows */}
             {Object.entries(allVariables).map(([varName, varData]) => (
               <div
                 key={varName}
-                className="grid grid-cols-[1fr_1fr_auto] gap-3 items-center px-4 py-2.5 border-b"
+                className="grid grid-cols-[200px_1fr_200px] gap-4 items-center px-4 py-2.5 border-b"
                 style={{ borderColor: "var(--border)", background: "var(--surface)" }}
               >
                 <span
@@ -661,7 +669,7 @@ export function Step8Rules({
                 >
                   {varName}
                 </span>
-                <div>
+                <div className="text-center">
                   {varData.source === "auto" ? (
                     <span
                       className="text-[12px] font-mono"
@@ -671,7 +679,7 @@ export function Step8Rules({
                     </span>
                   ) : (
                     <input
-                      className="rounded border px-2 py-1 text-[12px] font-mono w-full"
+                      className="rounded border px-2 py-1 text-[12px] font-mono w-full text-center"
                       style={{
                         background: "var(--bg)",
                         borderColor: "var(--border)",
@@ -687,7 +695,7 @@ export function Step8Rules({
                     />
                   )}
                 </div>
-                <div className="flex items-center gap-2">
+                <div className="flex items-center gap-2 justify-end">
                   <span
                     className="rounded-full px-2 py-0.5 text-[10px] font-medium"
                     style={{
@@ -825,13 +833,13 @@ export function Step8Rules({
             </div>
           </div>
 
-          {/* Resolved preview */}
+          {/* Resolved preview — shows final text with all variables replaced by values */}
           <div className="rounded-lg border p-4" style={{ background: "var(--bg)", borderColor: "var(--border)" }}>
             <label className="text-[10px] font-semibold uppercase tracking-widest" style={{ color: "var(--text3)" }}>
-              Template Preview (with variables)
+              Template Preview
             </label>
             <div className="mt-2 text-[12px] leading-relaxed whitespace-pre-wrap" style={{ color: "var(--text)" }}>
-              {renderHighlightedText(template.content)}
+              {resolveText(template.content) || "No content yet"}
             </div>
           </div>
         </div>

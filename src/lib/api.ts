@@ -246,6 +246,11 @@ export const api = {
         method: "POST",
         body: JSON.stringify(context),
       }),
+    translate: (text: string, source_lang: string, target_lang: string) =>
+      request<{ translated: string; source: string }>("/api/ai/translate", {
+        method: "POST",
+        body: JSON.stringify({ text, source_lang, target_lang }),
+      }),
   },
   math: {
     generate: (params: {
@@ -357,5 +362,8 @@ export const api = {
       ),
     delete: (projectId: string, commentId: string) =>
       request<{ ok: boolean }>(`/api/projects/${projectId}/comments/${commentId}`, { method: "DELETE" }),
+  },
+  dashboard: {
+    get: () => request<{ projects: unknown[]; recentActivity: unknown[] }>("/api/dashboard"),
   },
 };

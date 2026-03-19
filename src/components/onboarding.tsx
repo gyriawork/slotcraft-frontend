@@ -104,7 +104,7 @@ export function Onboarding({ onDismiss }: Props) {
             {creating ? "Creating..." : "Explore Sample Project"}
           </h3>
           <p className="mt-1 text-xs text-gray-500">
-            Pre-built &ldquo;Aztec Thunder&rdquo; slot with all 8 steps completed.
+            Pre-built &ldquo;Aztec Thunder&rdquo; slot with all 9 steps completed.
             See how a finished game design looks.
           </p>
           <span className="mt-3 inline-block text-xs font-medium text-blue-600">

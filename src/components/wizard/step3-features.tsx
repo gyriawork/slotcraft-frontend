@@ -260,9 +260,6 @@ export function Step3Features({ data, onUpdate, onBack, markets = [], marketCons
             <span className="text-sm font-semibold" style={{ color: "var(--text)" }}>
               Complexity: {Math.min(complexity, 20)}/20
             </span>
-            <span className="ml-3 text-xs" style={{ color: "var(--text3)" }}>
-              ~{devWeeks} dev weeks estimated
-            </span>
           </div>
           <span className="text-sm font-mono" style={{ color: "var(--text2)" }}>
             {selected.length} features selected

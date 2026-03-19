@@ -190,31 +190,6 @@ export function Step4Concept({ data, onUpdate, onBack, gameContext }: Props) {
           <p className="mt-1 text-xs text-gray-400">The more detail you provide, the better AI suggestions will be.</p>
         </div>
 
-        {/* Target Audience — kept */}
-        <div>
-          <label className="block text-sm font-medium text-gray-700">Target Audience</label>
-          <div className="mt-2 flex flex-wrap gap-2">
-            {AUDIENCES.map((a) => (
-              <button
-                key={a}
-                onClick={() => {
-                  const aud = local.brief.audience.includes(a)
-                    ? local.brief.audience.filter((x) => x !== a)
-                    : [...local.brief.audience, a];
-                  setLocal({ ...local, brief: { ...local.brief, audience: aud } });
-                }}
-                className={`rounded-full px-3 py-1 text-xs font-medium ${
-                  local.brief.audience.includes(a)
-                    ? "bg-blue-100 text-blue-700"
-                    : "bg-gray-100 text-gray-600 hover:bg-gray-200"
-                }`}
-              >
-                {a.replace("_", " ")}
-              </button>
-            ))}
-          </div>
-        </div>
-
         {/* Reference Games — kept */}
         <div>
           <label className="block text-sm font-medium text-gray-700">Reference Games</label>
@@ -300,7 +275,7 @@ export function Step4Concept({ data, onUpdate, onBack, gameContext }: Props) {
                     game_count: 0,
                     saturation_pct: 0,
                     top_competitors: [],
-                    hints: ["Unable to check — proceed with your vision."],
+                    hints: ["Check your AI connection."],
                   });
                 } finally {
                   setSatLoading(false);
@@ -389,9 +364,7 @@ export function Step4Concept({ data, onUpdate, onBack, gameContext }: Props) {
             } catch {
               const theme = local.brief.theme_input || "Mystical Adventure";
               const fallback: ConceptCard[] = [
-                { name: `${theme} Rising`, usp: "Progressive intensity mechanic", description: `Explore ${theme.toLowerCase()} with escalating multipliers.`, reasoning: "Cascade mechanics match rising intensity naturally.", market_context: "Cascade + narrative combo is underexplored.", badge: "Best market fit", score: 8 },
-                { name: `${theme} Legends`, usp: "Multi-level bonus with narrative", description: `Story-driven through ${theme.toLowerCase()} mythology.`, reasoning: "Narrative depth appeals to engagement audiences.", market_context: "Story-driven slots are rare in this theme.", badge: "Alternative angle", score: 7 },
-                { name: `${theme} Storm`, usp: "Chaotic wild system", description: `High-volatility chaos meets ${theme.toLowerCase()}.`, reasoning: "Random wilds create visual excitement.", market_context: "Wild mechanics rarely paired with this theme.", badge: "Wildcard", score: 6 },
+                { name: `${theme} Rising`, usp: "Check your AI connection.", description: `AI-generated concepts unavailable. Configure your Anthropic API key in Settings.`, reasoning: "—", market_context: "—", badge: "Offline", score: 0 },
               ];
               setAiSource("offline");
               markSubComplete(0);
@@ -1135,9 +1108,9 @@ export function Step4Concept({ data, onUpdate, onBack, gameContext }: Props) {
             <label className="block text-xs font-medium text-gray-600 capitalize">
               {key.replace("_", " ")}
             </label>
-            <input
-              type="text"
-              className="mt-1 w-full rounded-md border border-gray-300 px-3 py-1.5 text-sm focus:border-blue-400 focus:outline-none"
+            <textarea
+              rows={2}
+              className="mt-1 w-full rounded-md border border-gray-300 px-3 py-1.5 text-sm focus:border-blue-400 focus:outline-none resize-none"
               placeholder={`Describe ${key.replace("_", " ")} sound...`}
               value={local.art_direction.sound[key]}
               onChange={(e) =>
@@ -1153,9 +1126,69 @@ export function Step4Concept({ data, onUpdate, onBack, gameContext }: Props) {
           </div>
         ))}
 
-        <p className="text-xs text-gray-400 pt-2 border-t border-gray-100">
-          AI-powered audio generation coming soon.
-        </p>
+        {/* Custom sound fields */}
+        {Object.entries(local.art_direction.sound)
+          .filter(([key]) => !["ambient", "spin", "win", "bonus_trigger", "cascade", "max_win"].includes(key))
+          .map(([key]) => (
+            <div key={key} className="relative">
+              <label className="block text-xs font-medium text-gray-600">{key}</label>
+              <textarea
+                rows={2}
+                className="mt-1 w-full rounded-md border border-gray-300 px-3 py-1.5 text-sm focus:border-blue-400 focus:outline-none resize-none"
+                placeholder={`Describe ${key} sound...`}
+                value={local.art_direction.sound[key] ?? ""}
+                onChange={(e) =>
+                  setLocal({
+                    ...local,
+                    art_direction: {
+                      ...local.art_direction,
+                      sound: { ...local.art_direction.sound, [key]: e.target.value },
+                    },
+                  })
+                }
+              />
+              <button
+                onClick={() => {
+                  const { [key]: _, ...rest } = local.art_direction.sound;
+                  setLocal({ ...local, art_direction: { ...local.art_direction, sound: rest as typeof local.art_direction.sound } });
+                }}
+                className="absolute top-0 right-0 text-xs text-red-400 hover:text-red-600"
+              >
+                Remove
+              </button>
+            </div>
+          ))}
+
+        {/* Add custom field */}
+        <div className="flex gap-2 items-end pt-2 border-t border-gray-100">
+          <div className="flex-1">
+            <label className="block text-xs font-medium text-gray-500">Add custom sound field</label>
+            <input
+              type="text"
+              id="custom-sound-name"
+              className="mt-1 w-full rounded-md border border-gray-300 px-3 py-1.5 text-sm focus:border-blue-400 focus:outline-none"
+              placeholder="Field name, e.g. Free Spins Intro"
+            />
+          </div>
+          <button
+            onClick={() => {
+              const input = document.getElementById("custom-sound-name") as HTMLInputElement;
+              const name = input?.value.trim();
+              if (!name) return;
+              setLocal({
+                ...local,
+                art_direction: {
+                  ...local.art_direction,
+                  sound: { ...local.art_direction.sound, [name]: "" },
+                },
+              });
+              if (input) input.value = "";
+            }}
+            className="rounded-md border border-purple-200 bg-purple-50 px-3 py-1.5 text-xs font-medium text-purple-700 hover:bg-purple-100"
+          >
+            + Add
+          </button>
+        </div>
       </div>
 
       <div className="flex justify-between">

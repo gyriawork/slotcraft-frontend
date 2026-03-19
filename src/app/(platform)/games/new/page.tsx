@@ -10,9 +10,18 @@ import { Step6Simulation } from "@/components/wizard/step6-simulation";
 import { Step7Prototype } from "@/components/wizard/step7-prototype";
 import { Step8Rules } from "@/components/wizard/step8-rules";
 import { Step9Export } from "@/components/wizard/step9-export";
+import { useEffect, useRef } from "react";
 import { useWizardStore } from "@/lib/wizard-store";
 
 export default function NewGamePage() {
+  const resetRef = useRef(false);
+  useEffect(() => {
+    if (!resetRef.current) {
+      resetRef.current = true;
+      useWizardStore.getState().reset();
+    }
+  }, []);
+
   const {
     currentStep,
     completedSteps,

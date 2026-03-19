@@ -1,6 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useMemo, useState } from "react";
+import { useRouter } from "next/navigation";
 import { api, type LibraryGame, type PortfolioAnalytics } from "@/lib/api";
 import { CsvImport } from "@/components/library/csv-import";
 import { TYPE_GRADIENTS, TYPE_LETTER, VOLATILITY_LABELS } from "@/lib/constants";
@@ -64,11 +65,15 @@ const DOT_COLORS: Record<string, string> = { slot: "#7c6bf5", crash: "#f0b040", 
 /* ─── component ──────────────────────────────────────────────────── */
 
 export default function LibraryPage() {
+  const router = useRouter();
   const [games, setGames] = useState<LibraryGame[]>([]);
   const [analytics, setAnalytics] = useState<PortfolioAnalytics | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [showImport, setShowImport] = useState(false);
+  const [showAddGame, setShowAddGame] = useState(false);
+  const [addGameForm, setAddGameForm] = useState({ name: "", game_type: "slot", brand: "", rtp: "", volatility: "", theme: "" });
+  const [bulkLoading, setBulkLoading] = useState(false);
 
   // Filters
   const [search, setSearch] = useState("");
@@ -170,6 +175,63 @@ export default function LibraryPage() {
     });
   };
 
+  /* ─── bulk action handlers ──────────────────────────────────────── */
+
+  const handleBulkExport = useCallback(() => {
+    const selected = games.filter((g) => selectedIds.has(g.id));
+    const headers = ["Name", "Type", "Brand", "RTP", "Volatility", "Max Win", "Theme", "Status", "Features"];
+    const rows = selected.map((g) => [
+      g.name, g.game_type, pStr(g, "brand"), String(pNum(g, "rtp") ?? ""),
+      pStr(g, "volatility"), String(pNum(g, "max_win") ?? ""), pStr(g, "theme"),
+      g.status, pArr(g, "features").join("; "),
+    ]);
+    const csv = [headers, ...rows].map((r) => r.map((c) => `"${c}"`).join(",")).join("\n");
+    const blob = new Blob([csv], { type: "text/csv" });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url; a.download = `library-export-${selected.length}-games.csv`;
+    a.click(); URL.revokeObjectURL(url);
+    clearSelection();
+  }, [games, selectedIds, clearSelection]);
+
+  const handleBulkArchive = useCallback(async () => {
+    setBulkLoading(true);
+    try {
+      await Promise.all(
+        Array.from(selectedIds).map((id) => api.library.update(id, { status: "archived" } as Record<string, unknown>))
+      );
+      clearSelection();
+      fetchData();
+    } catch { /* ignore */ }
+    setBulkLoading(false);
+  }, [selectedIds, clearSelection, fetchData]);
+
+  const handleAddGame = useCallback(async () => {
+    if (!addGameForm.name.trim()) return;
+    // Get display name and team from settings
+    let createdBy = "Unknown";
+    let teamName = "";
+    try {
+      const raw = localStorage.getItem("slotcraft_settings");
+      if (raw) { const s = JSON.parse(raw); createdBy = s.displayName || "Unknown"; teamName = s.teamName || ""; }
+    } catch { /* ignore */ }
+    try {
+      await api.library.create({
+        name: addGameForm.name.trim(),
+        game_type: addGameForm.game_type,
+        parameters: {
+          brand: addGameForm.brand || undefined, rtp: addGameForm.rtp ? Number(addGameForm.rtp) : undefined,
+          volatility: addGameForm.volatility || undefined, theme: addGameForm.theme || undefined,
+          created_by: createdBy, team: teamName || undefined,
+        },
+        status: "concept",
+      } as Record<string, unknown>);
+      setShowAddGame(false);
+      setAddGameForm({ name: "", game_type: "slot", brand: "", rtp: "", volatility: "", theme: "" });
+      fetchData();
+    } catch { /* ignore */ }
+  }, [addGameForm, fetchData]);
+
   /* ─── render ────────────────────────────────────────────────────── */
 
   if (loading) {
@@ -200,6 +262,7 @@ export default function LibraryPage() {
               Import CSV
             </button>
             <button
+              onClick={() => setShowAddGame(true)}
               className="rounded-md px-3.5 py-2 text-[13px] font-medium text-white transition-colors"
               style={{ background: "var(--accent)" }}
             >
@@ -215,112 +278,7 @@ export default function LibraryPage() {
           </div>
         )}
 
-        {/* ─── 2. Analytics cards ──────────────────────────────── */}
-        {games.length > 0 && analytics && (
-          <div className="mb-6 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-            {/* Card 1: Portfolio */}
-            <div className="rounded-xl p-4" style={{ background: "var(--surface)", border: "1px solid var(--border)" }}>
-              <p className="text-[10px] font-semibold uppercase tracking-widest" style={{ color: "var(--text3)" }}>Portfolio</p>
-              <p className="mt-2 text-2xl font-bold" style={{ color: "var(--text)" }}>{analytics.total_games}</p>
-              <p className="mt-0.5 text-[11px]" style={{ color: "var(--text4)" }}>
-                Avg RTP: {analytics.avg_rtp ? `${analytics.avg_rtp.toFixed(1)}%` : "—"}
-                {analytics.rtp_range.min > 0 && (
-                  <span> ({analytics.rtp_range.min.toFixed(1)}–{analytics.rtp_range.max.toFixed(1)}%)</span>
-                )}
-              </p>
-              {/* Type distribution mini bars */}
-              <div className="mt-3 space-y-1">
-                {(["slot", "crash", "table"] as const).map((t) => {
-                  const count = games.filter((g) => g.game_type === t).length;
-                  const pct = games.length > 0 ? Math.round((count / games.length) * 100) : 0;
-                  return (
-                    <div key={t} className="flex items-center gap-2">
-                      <div className="w-3 h-3 rounded" style={{ background: TYPE_GRADIENTS[t] }} />
-                      <div className="flex-1 h-1.5 rounded-full overflow-hidden" style={{ background: "var(--bg)" }}>
-                        <div className="h-full rounded-full" style={{ width: `${pct}%`, background: DOT_COLORS[t] }} />
-                      </div>
-                      <span className="text-[10px] w-16 text-right" style={{ color: "var(--text4)" }}>
-                        {t.charAt(0).toUpperCase() + t.slice(1)} {count}
-                      </span>
-                    </div>
-                  );
-                })}
-              </div>
-              {/* Status dots */}
-              <div className="mt-3 flex gap-3">
-                {(["live", "development", "concept"] as const).map((s) => {
-                  const count = games.filter((g) => g.status === s).length;
-                  return (
-                    <div key={s} className="flex items-center gap-1">
-                      <div className="w-2 h-2 rounded-full" style={{ background: STATUS_COLORS[s]?.text ?? "#9ca3af" }} />
-                      <span className="text-[10px]" style={{ color: "var(--text4)" }}>{count} {s === "development" ? "Dev" : s.charAt(0).toUpperCase() + s.slice(1)}</span>
-                    </div>
-                  );
-                })}
-              </div>
-            </div>
-
-            {/* Card 2: Volatility × RTP scatter */}
-            <div className="rounded-xl p-4" style={{ background: "var(--surface)", border: "1px solid var(--border)" }}>
-              <p className="text-[10px] font-semibold uppercase tracking-widest" style={{ color: "var(--text3)" }}>Volatility × RTP</p>
-              <ScatterChart games={games} />
-            </div>
-
-            {/* Card 3: Theme saturation */}
-            <div className="rounded-xl p-4" style={{ background: "var(--surface)", border: "1px solid var(--border)" }}>
-              <p className="text-[10px] font-semibold uppercase tracking-widest" style={{ color: "var(--text3)" }}>Theme Saturation</p>
-              <div className="mt-3 space-y-1.5 max-h-[180px] overflow-y-auto">
-                {Object.entries(analytics.theme_distribution)
-                  .sort(([, a], [, b]) => b - a)
-                  .slice(0, 8)
-                  .map(([theme]) => {
-                    const sat = THEME_SATURATION[theme] ?? 30;
-                    const barColor = sat > 70 ? "#ef6060" : sat > 40 ? "#f0b040" : "#3dd68c";
-                    return (
-                      <div key={theme} className="flex items-center gap-2">
-                        <span className="text-[10px] w-20 truncate" style={{ color: "var(--text3)" }}>{theme}</span>
-                        <div className="flex-1 h-1.5 rounded-full overflow-hidden" style={{ background: "var(--bg)" }}>
-                          <div className="h-full rounded-full" style={{ width: `${sat}%`, background: barColor }} />
-                        </div>
-                        <span className="text-[10px] w-8 text-right" style={{ color: "var(--text4)" }}>{sat}%</span>
-                      </div>
-                    );
-                  })}
-              </div>
-            </div>
-
-            {/* Card 4: Feature coverage vs market */}
-            <div className="rounded-xl p-4" style={{ background: "var(--surface)", border: "1px solid var(--border)" }}>
-              <p className="text-[10px] font-semibold uppercase tracking-widest" style={{ color: "var(--text3)" }}>Feature Coverage</p>
-              <div className="mt-3 space-y-2 max-h-[180px] overflow-y-auto">
-                {featureAdoption.slice(0, 6).map(({ feature, pct }) => {
-                  const marketPct = MARKET_AVG[feature] ?? 20;
-                  const gap = marketPct - pct;
-                  return (
-                    <div key={feature}>
-                      <div className="flex items-center justify-between mb-0.5">
-                        <span className="text-[10px]" style={{ color: "var(--text3)" }}>{feature}</span>
-                        {gap > 15 && <span className="text-[9px] px-1 rounded" style={{ background: "rgba(239,96,96,0.15)", color: "#ef6060" }}>gap</span>}
-                      </div>
-                      <div className="flex gap-1">
-                        <div className="flex-1 h-1.5 rounded-full overflow-hidden" style={{ background: "var(--bg)" }}>
-                          <div className="h-full rounded-full" style={{ width: `${pct}%`, background: "var(--accent)" }} />
-                        </div>
-                        <div className="flex-1 h-1.5 rounded-full overflow-hidden" style={{ background: "var(--bg)" }}>
-                          <div className="h-full rounded-full" style={{ width: `${marketPct}%`, background: "rgba(124,107,245,0.3)" }} />
-                        </div>
-                      </div>
-                      <div className="flex justify-between text-[9px] mt-0.5" style={{ color: "var(--text4)" }}>
-                        <span>You {pct}%</span>
-                        <span>Market {marketPct}%</span>
-                      </div>
-                    </div>
-                  );
-                })}
-              </div>
-            </div>
-          </div>
-        )}
+        {/* Analytics cards removed per user request */}
 
         {/* ─── 3. Filters row ──────────────────────────────────── */}
         {games.length > 0 && (
@@ -495,7 +453,7 @@ export default function LibraryPage() {
 
       {/* ─── 5. Side panel ──────────────────────────────────────── */}
       {panelGame && (
-        <SidePanel game={panelGame} tab={panelTab} onTabChange={setPanelTab} onClose={() => setPanelGameId(null)} />
+        <SidePanel game={panelGame} tab={panelTab} onTabChange={setPanelTab} onClose={() => setPanelGameId(null)} onOpenWizard={(pid) => { if (pid) router.push(`/games/${pid}`); }} />
       )}
 
       {/* ─── 6. Bulk actions bar ────────────────────────────────── */}
@@ -503,11 +461,40 @@ export default function LibraryPage() {
         <div className="fixed bottom-6 left-1/2 -translate-x-1/2 z-40 flex items-center gap-3 rounded-xl px-5 py-3 shadow-2xl"
           style={{ background: "var(--surface)", border: "1px solid var(--border)" }}>
           <span className="text-[13px] font-semibold" style={{ color: "var(--text)" }}>{selectedIds.size} selected</span>
-          <button className="rounded-md px-3 py-1.5 text-[12px] font-medium" style={{ background: "var(--accent)", color: "#fff" }}>Export</button>
-          <button className="rounded-md px-3 py-1.5 text-[12px] font-medium" style={{ background: "rgba(124,107,245,0.12)", color: "var(--accent)" }}>AI Analysis</button>
-          <button className="rounded-md px-3 py-1.5 text-[12px] font-medium" style={{ background: "rgba(239,96,96,0.12)", color: "#ef6060" }}>Archive</button>
+          <button onClick={handleBulkExport} className="rounded-md px-3 py-1.5 text-[12px] font-medium" style={{ background: "var(--accent)", color: "#fff" }}>Export CSV</button>
+          <button onClick={handleBulkArchive} disabled={bulkLoading} className="rounded-md px-3 py-1.5 text-[12px] font-medium disabled:opacity-50" style={{ background: "rgba(239,96,96,0.12)", color: "#ef6060" }}>{bulkLoading ? "Archiving..." : "Archive"}</button>
           <button onClick={clearSelection} className="rounded-md px-3 py-1.5 text-[12px] font-medium" style={{ color: "var(--text3)" }}>Cancel</button>
         </div>
+      )}
+
+      {/* Add Game Modal */}
+      {showAddGame && (
+        <>
+          <div className="fixed inset-0 z-40 bg-black/50" onClick={() => setShowAddGame(false)} />
+          <div className="fixed left-1/2 top-1/2 z-50 -translate-x-1/2 -translate-y-1/2 w-[420px] rounded-xl p-5" style={{ background: "var(--surface)", border: "1px solid var(--border)" }}>
+            <h3 className="text-[14px] font-semibold mb-4" style={{ color: "var(--text)" }}>Add New Game</h3>
+            <div className="space-y-3">
+              <input value={addGameForm.name} onChange={(e) => setAddGameForm((f) => ({ ...f, name: e.target.value }))} placeholder="Game name" className="w-full rounded-md px-3 py-2 text-[12px]" style={{ background: "var(--bg)", color: "var(--text)", border: "1px solid var(--border)" }} autoFocus />
+              <div className="grid grid-cols-2 gap-2">
+                <select value={addGameForm.game_type} onChange={(e) => setAddGameForm((f) => ({ ...f, game_type: e.target.value }))} className="rounded-md px-3 py-2 text-[12px]" style={{ background: "var(--bg)", color: "var(--text)", border: "1px solid var(--border)" }}>
+                  <option value="slot">Slot</option><option value="crash">Crash</option><option value="table">Table</option>
+                </select>
+                <input value={addGameForm.brand} onChange={(e) => setAddGameForm((f) => ({ ...f, brand: e.target.value }))} placeholder="Brand" className="rounded-md px-3 py-2 text-[12px]" style={{ background: "var(--bg)", color: "var(--text)", border: "1px solid var(--border)" }} />
+              </div>
+              <div className="grid grid-cols-2 gap-2">
+                <input value={addGameForm.rtp} onChange={(e) => setAddGameForm((f) => ({ ...f, rtp: e.target.value }))} placeholder="RTP (e.g. 96.0)" type="number" step="0.1" className="rounded-md px-3 py-2 text-[12px]" style={{ background: "var(--bg)", color: "var(--text)", border: "1px solid var(--border)" }} />
+                <select value={addGameForm.volatility} onChange={(e) => setAddGameForm((f) => ({ ...f, volatility: e.target.value }))} className="rounded-md px-3 py-2 text-[12px]" style={{ background: "var(--bg)", color: "var(--text)", border: "1px solid var(--border)" }}>
+                  <option value="">Volatility</option><option value="low">Low</option><option value="med">Med</option><option value="med-high">Med-High</option><option value="high">High</option><option value="ultra">Ultra</option>
+                </select>
+              </div>
+              <input value={addGameForm.theme} onChange={(e) => setAddGameForm((f) => ({ ...f, theme: e.target.value }))} placeholder="Theme (e.g. Aztec Mythology)" className="w-full rounded-md px-3 py-2 text-[12px]" style={{ background: "var(--bg)", color: "var(--text)", border: "1px solid var(--border)" }} />
+            </div>
+            <div className="flex gap-2 mt-4 justify-end">
+              <button onClick={() => setShowAddGame(false)} className="rounded-md px-3 py-1.5 text-[12px]" style={{ color: "var(--text3)" }}>Cancel</button>
+              <button onClick={handleAddGame} disabled={!addGameForm.name.trim()} className="rounded-md px-4 py-1.5 text-[12px] font-medium text-white disabled:opacity-40" style={{ background: "var(--accent)" }}>Add Game</button>
+            </div>
+          </div>
+        </>
       )}
 
       {/* CSV Import Modal */}
@@ -725,11 +712,12 @@ function GameRow({ game, idx, aiScore, features, isExpanded, isSelected, onToggl
 
 /* ─── Side panel ─────────────────────────────────────────────────── */
 
-function SidePanel({ game, tab, onTabChange, onClose }: {
+function SidePanel({ game, tab, onTabChange, onClose, onOpenWizard }: {
   game: LibraryGame;
   tab: "overview" | "ai" | "marketing" | "history";
   onTabChange: (t: "overview" | "ai" | "marketing" | "history") => void;
   onClose: () => void;
+  onOpenWizard: (projectId: string | null) => void;
 }) {
   const aiScore = pNum(game, "ai_score") ?? null;
   const features = pArr(game, "features");
@@ -828,25 +816,71 @@ function SidePanel({ game, tab, onTabChange, onClose }: {
 
               {/* Actions */}
               <div className="flex gap-2 mt-4">
-                <button className="flex-1 rounded-md py-2 text-[12px] font-medium text-white" style={{ background: "var(--accent)" }}>Open in wizard</button>
-                <button className="flex-1 rounded-md py-2 text-[12px] font-medium" style={{ background: "var(--surface)", color: "var(--text2)", border: "1px solid var(--border)" }}>Generate product sheet</button>
+                <button onClick={() => onOpenWizard(game.project_id)} className="flex-1 rounded-md py-2 text-[12px] font-medium text-white" style={{ background: "var(--accent)" }}>Open in wizard</button>
+                <button onClick={() => onTabChange("marketing")} className="flex-1 rounded-md py-2 text-[12px] font-medium" style={{ background: "var(--surface)", color: "var(--text2)", border: "1px solid var(--border)" }}>Marketing</button>
               </div>
             </div>
           )}
 
           {tab === "ai" && (
-            <div className="py-8 text-center">
-              <p className="text-[13px]" style={{ color: "var(--text4)" }}>AI Analysis — coming soon</p>
+            <div className="space-y-3">
+              {aiScore != null ? (
+                <>
+                  <div className="flex items-center gap-3">
+                    <AiScoreBadge score={aiScore} size={48} />
+                    <div>
+                      <p className="text-[14px] font-semibold" style={{ color: AI_COLOR(aiScore) }}>{aiScore}/10</p>
+                      <p className="text-[11px]" style={{ color: "var(--text4)" }}>Overall AI Score</p>
+                    </div>
+                  </div>
+                  <div className="rounded-lg p-3 space-y-2" style={{ background: "var(--bg)", border: "1px solid var(--border)" }}>
+                    <p className="text-[11px] font-semibold" style={{ color: "var(--text3)" }}>Assessment</p>
+                    <p className="text-[11px]" style={{ color: "var(--text2)" }}>
+                      {aiScore >= 7 ? "Strong game design with solid mechanics and market appeal." : aiScore >= 5 ? "Decent foundation but could benefit from refinement in key areas." : "Needs significant improvements to compete in current market."}
+                    </p>
+                  </div>
+                </>
+              ) : (
+                <div className="py-6 text-center">
+                  <AiScoreBadge score={null} size={48} />
+                  <p className="mt-3 text-[12px]" style={{ color: "var(--text4)" }}>AI analysis has not been run yet</p>
+                  <p className="mt-1 text-[11px]" style={{ color: "var(--text4)" }}>Open the game in the wizard to run a full analysis</p>
+                </div>
+              )}
             </div>
           )}
           {tab === "marketing" && (
-            <div className="py-8 text-center">
-              <p className="text-[13px]" style={{ color: "var(--text4)" }}>Marketing — coming soon</p>
+            <div className="space-y-3">
+              <p className="text-[11px]" style={{ color: "var(--text4)" }}>Generate marketing materials for this game from the Marketing page.</p>
+              <div className="rounded-lg p-3 space-y-2" style={{ background: "var(--bg)", border: "1px solid var(--border)" }}>
+                <p className="text-[11px]" style={{ color: "var(--text3)" }}>Game: {game.name}</p>
+                <p className="text-[11px]" style={{ color: "var(--text3)" }}>Theme: {pStr(game, "theme") || "—"}</p>
+                <p className="text-[11px]" style={{ color: "var(--text3)" }}>Type: {game.game_type}</p>
+              </div>
+              <button onClick={() => { onClose(); window.location.href = "/marketing"; }} className="w-full rounded-md py-2 text-[12px] font-medium" style={{ background: "rgba(124,107,245,0.12)", color: "var(--accent)" }}>Go to Marketing</button>
             </div>
           )}
           {tab === "history" && (
-            <div className="py-8 text-center">
-              <p className="text-[13px]" style={{ color: "var(--text4)" }}>History — coming soon</p>
+            <div className="space-y-2">
+              <div className="flex items-center gap-2 py-2" style={{ borderBottom: "1px solid var(--border)" }}>
+                <div className="w-1.5 h-1.5 rounded-full" style={{ background: "var(--green)" }} />
+                <span className="text-[11px]" style={{ color: "var(--text3)" }}>Created</span>
+                <span className="ml-auto text-[10px]" style={{ color: "var(--text4)" }}>{new Date(game.created_at).toLocaleDateString()}</span>
+              </div>
+              {game.updated_at !== game.created_at && (
+                <div className="flex items-center gap-2 py-2" style={{ borderBottom: "1px solid var(--border)" }}>
+                  <div className="w-1.5 h-1.5 rounded-full" style={{ background: "var(--accent)" }} />
+                  <span className="text-[11px]" style={{ color: "var(--text3)" }}>Last updated</span>
+                  <span className="ml-auto text-[10px]" style={{ color: "var(--text4)" }}>{new Date(game.updated_at).toLocaleDateString()}</span>
+                </div>
+              )}
+              {game.ai_analyzed_at && (
+                <div className="flex items-center gap-2 py-2" style={{ borderBottom: "1px solid var(--border)" }}>
+                  <div className="w-1.5 h-1.5 rounded-full" style={{ background: "#f0b040" }} />
+                  <span className="text-[11px]" style={{ color: "var(--text3)" }}>AI analyzed</span>
+                  <span className="ml-auto text-[10px]" style={{ color: "var(--text4)" }}>{new Date(game.ai_analyzed_at).toLocaleDateString()}</span>
+                </div>
+              )}
             </div>
           )}
         </div>

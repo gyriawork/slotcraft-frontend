@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { api, type Project } from "@/lib/api";
 import { buildProductSheetData } from "@/components/marketing/product-sheet-utils";
 
@@ -25,11 +25,11 @@ interface SizeTemplate {
   uploaded: ("JPG" | "PSD")[];
 }
 
-const ICON_SIZES: SizeTemplate[] = [
-  { w: 1920, h: 250, label: "Website banner", aspect: "horizontal", uploaded: ["JPG", "PSD"] },
-  { w: 1800, h: 400, label: "Email header", aspect: "horizontal", uploaded: ["JPG"] },
+const ICON_SIZES_INIT: SizeTemplate[] = [
+  { w: 1920, h: 250, label: "Website banner", aspect: "horizontal", uploaded: [] },
+  { w: 1800, h: 400, label: "Email header", aspect: "horizontal", uploaded: [] },
   { w: 1000, h: 700, label: "Lobby tile (large)", aspect: "horizontal", uploaded: [] },
-  { w: 945, h: 370, label: "Featured banner", aspect: "horizontal", uploaded: ["JPG", "PSD"] },
+  { w: 945, h: 370, label: "Featured banner", aspect: "horizontal", uploaded: [] },
   { w: 720, h: 340, label: "Lobby tile (medium)", aspect: "horizontal", uploaded: [] },
   { w: 450, h: 330, label: "Thumbnail", aspect: "square", uploaded: [] },
   { w: 446, h: 186, label: "Compact banner", aspect: "leaderboard", uploaded: [] },
@@ -51,7 +51,6 @@ interface AssetItem {
   type: string;
   dims: string;
   category: string;
-  selected: boolean;
 }
 
 const ROLE_EMOJI: Record<string, string> = {
@@ -63,9 +62,9 @@ const ROLE_EMOJI: Record<string, string> = {
 
 function buildAssetsFromProject(project: Project | null): AssetItem[] {
   const base: AssetItem[] = [
-    { emoji: "🎨", name: "Background", type: "PNG", dims: "1920x1080", category: "Backgrounds", selected: true },
-    { emoji: "🏛", name: "bg_reels", type: "PNG", dims: "1920x1080", category: "Backgrounds", selected: true },
-    { emoji: "🎮", name: "Game elements", type: "PSD", dims: "layered", category: "UI elements", selected: true },
+    { emoji: "🎨", name: "Background", type: "PNG", dims: "1920x1080", category: "Backgrounds" },
+    { emoji: "🏛", name: "bg_reels", type: "PNG", dims: "1920x1080", category: "Backgrounds" },
+    { emoji: "🎮", name: "Game elements", type: "PSD", dims: "layered", category: "UI elements" },
   ];
   const sd = project?.step_data ?? {};
   const s4 = (sd.step4 ?? {}) as { symbols?: Array<{ id: string; name: string; role: string; emoji?: string }> };
@@ -82,13 +81,13 @@ function buildAssetsFromProject(project: Project | null): AssetItem[] {
     }
   } else {
     base.push(
-      { emoji: "🌀", name: "Wild symbol", type: "PNG", dims: "256x256", category: "Symbols", selected: true },
-      { emoji: "⚡", name: "Scatter", type: "PNG", dims: "256x256", category: "Symbols", selected: true },
+      { emoji: "🌀", name: "Wild symbol", type: "PNG", dims: "256x256", category: "Symbols" },
+      { emoji: "⚡", name: "Scatter", type: "PNG", dims: "256x256", category: "Symbols" },
     );
   }
   base.push(
-    { emoji: "SC", name: "Logo", type: "SVG", dims: "", category: "Logos", selected: false },
-    { emoji: "SC", name: "Logo_white", type: "SVG", dims: "", category: "Logos", selected: false },
+    { emoji: "SC", name: "Logo", type: "SVG", dims: "", category: "Logos" },
+    { emoji: "SC", name: "Logo_white", type: "SVG", dims: "", category: "Logos" },
   );
   return base;
 }
@@ -180,7 +179,7 @@ export default function MarketingPage() {
   const [tab, setTab] = useState(0);
 
   // Promotion pack state
-  const [sizes, setSizes] = useState<SizeTemplate[]>(ICON_SIZES);
+  const [sizes, setSizes] = useState<SizeTemplate[]>(ICON_SIZES_INIT);
   const [aspectFilter, setAspectFilter] = useState("horizontal");
   const [customW, setCustomW] = useState("");
   const [customH, setCustomH] = useState("");
@@ -188,6 +187,8 @@ export default function MarketingPage() {
 
   // Game assets state
   const [assetCategory, setAssetCategory] = useState("All");
+  const [selectedAssets, setSelectedAssets] = useState<Set<string>>(new Set());
+  const [uploadedAssets, setUploadedAssets] = useState<AssetItem[]>([]);
 
   // Product sheet template
   const [psTemplate, setPsTemplate] = useState("Standard");
@@ -239,7 +240,17 @@ export default function MarketingPage() {
   }, [selected]);
 
   // Dynamic data derived from selected project
-  const gameAssets = useMemo(() => buildAssetsFromProject(selected), [selected]);
+  const gameAssets = useMemo(() => [...buildAssetsFromProject(selected), ...uploadedAssets], [selected, uploadedAssets]);
+
+  const handleAssetUpload = useCallback((files: File[]) => {
+    const newAssets: AssetItem[] = files.map((f) => {
+      const ext = f.name.split(".").pop()?.toUpperCase() ?? "FILE";
+      const isImage = f.type.startsWith("image/");
+      const cat = ext === "SVG" ? "Logos" : ext === "PSD" || ext === "AI" ? "UI elements" : isImage ? "Backgrounds" : "Effects";
+      return { emoji: "📁", name: f.name.replace(/\.[^.]+$/, ""), type: ext, dims: "", category: cat };
+    });
+    setUploadedAssets((prev) => [...prev, ...newAssets]);
+  }, []);
   const psFeatures = useMemo(() => buildPsFeatures(selected), [selected]);
   const screenshots = useMemo(() => {
     const sd = selected?.step_data ?? {};
@@ -402,7 +413,7 @@ export default function MarketingPage() {
                 {projects.map((p) => (
                   <button
                     key={p.id}
-                    onClick={() => { setSelectedId(p.id); setMenuOpen(false); }}
+                    onClick={() => { setSelectedId(p.id); setMenuOpen(false); setSelectedAssets(new Set()); setUploadedAssets([]); }}
                     className="flex items-center gap-2.5 w-full px-3.5 py-2.5 text-left transition-colors"
                     style={{ background: p.id === selectedId ? "var(--accent-soft)" : "transparent" }}
                     onMouseEnter={(e) => { if (p.id !== selectedId) (e.currentTarget.style.background = "var(--bg4)"); }}
@@ -503,14 +514,26 @@ export default function MarketingPage() {
                 {filteredSizes.map((s, i) => {
                   const hasFile = s.uploaded.length > 0;
                   return (
-                    <div
+                    <label
                       key={`${s.w}-${s.h}-${i}`}
-                      className="relative rounded-lg border p-3 transition-colors cursor-pointer"
+                      className="relative rounded-lg border p-3 transition-colors cursor-pointer hover:border-[var(--accent)]"
                       style={{
                         background: "var(--bg3)",
                         borderColor: hasFile ? "var(--green)" : "var(--border)",
                       }}
                     >
+                      <input
+                        type="file"
+                        accept="image/*,.psd"
+                        className="hidden"
+                        onChange={(e) => {
+                          const file = e.target.files?.[0];
+                          if (file) {
+                            const fmt = file.name.toLowerCase().endsWith(".psd") ? "PSD" : "JPG";
+                            setSizes((prev) => prev.map((ps, pi) => pi === i ? { ...ps, uploaded: [...new Set([...ps.uploaded, fmt as "JPG" | "PSD"])] } : ps));
+                          }
+                        }}
+                      />
                       <div className="absolute top-2 right-2 w-2.5 h-2.5 rounded-full" style={{ background: hasFile ? "var(--green)" : "var(--bg5)" }} />
                       <div className="text-[14px] font-medium mb-1" style={{ color: "var(--accent)" }}>
                         {s.w} x {s.h}
@@ -530,7 +553,8 @@ export default function MarketingPage() {
                           </span>
                         ))}
                       </div>
-                    </div>
+                      {!hasFile && <div className="mt-2 text-[10px] text-center" style={{ color: "var(--text4)" }}>Click to upload</div>}
+                    </label>
                   );
                 })}
               </div>
@@ -547,19 +571,31 @@ export default function MarketingPage() {
             </Section>
 
             <Section title="Upload files">
-              <DropZone text="Drag & drop icon files here" hint="JPG, PNG, PSD — auto-match to sizes by dimensions. Or click to browse." />
+              <DropZone text="Drag & drop icon files here" hint="JPG, PNG, PSD — auto-match to sizes by dimensions. Or click to browse." onFiles={(files) => {
+                for (const f of files) {
+                  const ext = f.name.split(".").pop()?.toUpperCase() ?? "";
+                  const fmt = ext === "PSD" ? "PSD" : "JPG";
+                  // Mark the first empty size as uploaded with this format
+                  setSizes((prev) => {
+                    const idx = prev.findIndex((s) => !s.uploaded.includes(fmt as "JPG" | "PSD"));
+                    if (idx === -1) return prev;
+                    return prev.map((s, i) => i === idx ? { ...s, uploaded: [...new Set([...s.uploaded, fmt as "JPG" | "PSD"])] } : s);
+                  });
+                }
+              }} />
               <Hint variant="info">Files are auto-matched to template sizes by their dimensions. If a file doesn't match any template, you'll be asked to assign it manually or create a new size.</Hint>
             </Section>
 
             <Section title="Bulk actions">
               <div className="flex gap-2 flex-wrap">
-                <Btn>Download all JPG</Btn>
-                <Btn>Download all PSD</Btn>
-                <Btn>Download complete pack (ZIP)</Btn>
-                <div className="ml-auto"><Btn>Export size list (CSV)</Btn></div>
+                <Btn onClick={() => {
+                  const csv = ["Width,Height,Label,Aspect,Uploaded Formats", ...sizes.map((s) => `${s.w},${s.h},"${s.label}",${s.aspect},"${s.uploaded.join(", ")}"`),].join("\n");
+                  const blob = new Blob([csv], { type: "text/csv" });
+                  const a = document.createElement("a"); a.href = URL.createObjectURL(blob); a.download = "icon-sizes.csv"; a.click(); URL.revokeObjectURL(a.href);
+                }}>Export size list (CSV)</Btn>
               </div>
               <p className="text-[11px] mt-2" style={{ color: "var(--text3)", fontStyle: "italic" }}>
-                {uploadedCount} of {sizes.length} sizes uploaded. Complete the pack before sharing with operators.
+                {uploadedCount} of {sizes.length} sizes uploaded. Upload files above to enable download buttons.
               </p>
             </Section>
           </>
@@ -572,7 +608,7 @@ export default function MarketingPage() {
               Individual game elements: symbols, backgrounds, UI, logos. Upload and organize for art handoff.
             </p>
 
-            <DropZone text="Drag & drop game assets here" hint="PNG, SVG, PSD, AI — symbols, backgrounds, UI elements, logos" />
+            <DropZone text="Drag & drop game assets here" hint="PNG, SVG, PSD, AI — symbols, backgrounds, UI elements, logos" onFiles={handleAssetUpload} />
 
             {/* Category chips */}
             <div className="flex gap-1.5 flex-wrap my-3">
@@ -595,36 +631,45 @@ export default function MarketingPage() {
 
             {/* Asset grid */}
             <div className="grid gap-2" style={{ gridTemplateColumns: "repeat(auto-fill, minmax(140px, 1fr))" }}>
-              {filteredAssets.map((a, i) => (
-                <div
-                  key={`${a.name}-${i}`}
-                  className="relative rounded-lg border p-2.5 text-center cursor-pointer transition-colors"
-                  style={{ background: "var(--bg3)", borderColor: "var(--border)" }}
-                >
-                  {/* Checkbox */}
+              {filteredAssets.map((a, i) => {
+                const assetKey = `${a.name}-${i}`;
+                const isSelected = selectedAssets.has(assetKey);
+                return (
                   <div
-                    className="absolute top-1.5 right-1.5 w-4 h-4 rounded flex items-center justify-center text-[9px]"
+                    key={assetKey}
+                    onClick={() => setSelectedAssets((prev) => {
+                      const next = new Set(prev);
+                      next.has(assetKey) ? next.delete(assetKey) : next.add(assetKey);
+                      return next;
+                    })}
+                    className="relative rounded-lg border p-2.5 text-center cursor-pointer transition-colors"
                     style={{
-                      background: a.selected ? "var(--accent)" : "var(--bg4)",
-                      borderColor: a.selected ? "var(--accent)" : "var(--border)",
-                      border: "0.5px solid",
-                      color: a.selected ? "#fff" : "transparent",
+                      background: "var(--bg3)",
+                      borderColor: isSelected ? "var(--accent)" : "var(--border)",
                     }}
                   >
-                    ✓
+                    {/* Checkbox — only visible when selected */}
+                    {isSelected && (
+                      <div
+                        className="absolute top-1.5 right-1.5 w-4 h-4 rounded flex items-center justify-center text-[9px]"
+                        style={{ background: "var(--accent)", color: "#fff" }}
+                      >
+                        ✓
+                      </div>
+                    )}
+                    <div
+                      className="w-full rounded-md mb-1.5 flex items-center justify-center text-[24px]"
+                      style={{ aspectRatio: "1", background: "var(--bg4)" }}
+                    >
+                      {a.emoji}
+                    </div>
+                    <div className="text-[11px] truncate" style={{ color: "var(--text2)" }}>{a.name}</div>
+                    <div className="text-[9px]" style={{ color: "var(--text3)" }}>
+                      {a.type}{a.dims ? ` · ${a.dims}` : ""}
+                    </div>
                   </div>
-                  <div
-                    className="w-full rounded-md mb-1.5 flex items-center justify-center text-[24px]"
-                    style={{ aspectRatio: "1", background: "var(--bg4)" }}
-                  >
-                    {a.emoji}
-                  </div>
-                  <div className="text-[11px] truncate" style={{ color: "var(--text2)" }}>{a.name}</div>
-                  <div className="text-[9px]" style={{ color: "var(--text3)" }}>
-                    {a.type}{a.dims ? ` · ${a.dims}` : ""}
-                  </div>
-                </div>
-              ))}
+                );
+              })}
             </div>
           </Section>
         )}
@@ -660,15 +705,21 @@ export default function MarketingPage() {
                 </div>
               ))}
               {/* Add card */}
-              <div
-                className="rounded-lg border flex items-center justify-center cursor-pointer transition-colors"
+              <label
+                className="rounded-lg border flex items-center justify-center cursor-pointer transition-colors hover:border-[var(--accent)]"
                 style={{ aspectRatio: "16/9", borderColor: "var(--border)", borderStyle: "dashed", background: "var(--bg3)" }}
               >
+                <input type="file" accept="image/*" className="hidden" onChange={(e) => {
+                  const file = e.target.files?.[0];
+                  if (file) {
+                    setScreenshots((prev) => [...prev, { label: file.name.replace(/\.[^.]+$/, ""), url: URL.createObjectURL(file) }]);
+                  }
+                }} />
                 <div className="text-center">
                   <div className="text-[11px]" style={{ color: "var(--text3)" }}>+ Add screenshot</div>
-                  <div className="text-[10px]" style={{ color: "var(--text3)" }}>Drop image or capture</div>
+                  <div className="text-[10px]" style={{ color: "var(--text3)" }}>Click to upload</div>
                 </div>
-              </div>
+              </label>
             </div>
 
             {/* Actions */}
@@ -1096,14 +1147,34 @@ function Btn({ children, onClick, primary }: { children: React.ReactNode; onClic
   );
 }
 
-function DropZone({ text, hint }: { text: string; hint: string }) {
+function DropZone({ text, hint, onFiles }: { text: string; hint: string; onFiles?: (files: File[]) => void }) {
+  const [dragOver, setDragOver] = useState(false);
+  const inputRef = useRef<HTMLInputElement>(null);
+
+  const handleFiles = useCallback((files: FileList | null) => {
+    if (!files || files.length === 0 || !onFiles) return;
+    onFiles(Array.from(files));
+  }, [onFiles]);
+
   return (
     <div
       className="rounded-lg border-2 border-dashed py-8 text-center cursor-pointer transition-colors my-3"
-      style={{ borderColor: "var(--border)" }}
+      style={{ borderColor: dragOver ? "var(--accent)" : "var(--border)", background: dragOver ? "rgba(124,107,245,0.05)" : "transparent" }}
+      onClick={() => inputRef.current?.click()}
+      onDragOver={(e) => { e.preventDefault(); setDragOver(true); }}
+      onDragLeave={() => setDragOver(false)}
+      onDrop={(e) => { e.preventDefault(); setDragOver(false); handleFiles(e.dataTransfer.files); }}
     >
-      <div className="text-[28px] mb-2 opacity-40">⇩</div>
-      <div className="text-[13px]" style={{ color: "var(--text2)" }}>{text}</div>
+      <input
+        ref={inputRef}
+        type="file"
+        multiple
+        accept="image/*,.psd,.ai,.svg"
+        className="hidden"
+        onChange={(e) => { handleFiles(e.target.files); e.target.value = ""; }}
+      />
+      <div className="text-[28px] mb-2 opacity-40">{dragOver ? "+" : "⇩"}</div>
+      <div className="text-[13px]" style={{ color: dragOver ? "var(--accent)" : "var(--text2)" }}>{dragOver ? "Drop files here" : text}</div>
       <div className="text-[11px] mt-1" style={{ color: "var(--text3)" }}>{hint}</div>
     </div>
   );

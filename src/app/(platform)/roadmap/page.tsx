@@ -110,12 +110,12 @@ export default function RoadmapPage() {
   const filtered = useMemo(() => {
     return allGames.filter((g) => {
       if (!activeTypes.has(g.type)) return false;
-      // If there are team filters, apply them; skip for games without team
       if (allTeams.length > 0 && g.team !== "\u2014" && !activeTeams.has(g.team)) return false;
       if (statusFilter !== "all" && g.status !== statusFilter) return false;
+      if (g.year && g.year !== year) return false;
       return true;
     });
-  }, [allGames, activeTypes, activeTeams, allTeams, statusFilter]);
+  }, [allGames, activeTypes, activeTeams, allTeams, statusFilter, year]);
 
   // Stats
   const stats = useMemo(() => {
