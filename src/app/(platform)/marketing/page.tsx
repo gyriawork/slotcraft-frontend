@@ -51,6 +51,7 @@ interface AssetItem {
   type: string;
   dims: string;
   category: string;
+  selected?: boolean;
 }
 
 const ROLE_EMOJI: Record<string, string> = {
@@ -189,6 +190,7 @@ export default function MarketingPage() {
   const [assetCategory, setAssetCategory] = useState("All");
   const [selectedAssets, setSelectedAssets] = useState<Set<string>>(new Set());
   const [uploadedAssets, setUploadedAssets] = useState<AssetItem[]>([]);
+  const [extraScreenshots, setExtraScreenshots] = useState<{ label: string; url: string }[]>([]);
 
   // Product sheet template
   const [psTemplate, setPsTemplate] = useState("Standard");
@@ -712,7 +714,7 @@ export default function MarketingPage() {
                 <input type="file" accept="image/*" className="hidden" onChange={(e) => {
                   const file = e.target.files?.[0];
                   if (file) {
-                    setScreenshots((prev) => [...prev, { label: file.name.replace(/\.[^.]+$/, ""), url: URL.createObjectURL(file) }]);
+                    setExtraScreenshots((prev: { label: string; url: string }[]) => [...prev, { label: file.name.replace(/\.[^.]+$/, ""), url: URL.createObjectURL(file) }]);
                   }
                 }} />
                 <div className="text-center">

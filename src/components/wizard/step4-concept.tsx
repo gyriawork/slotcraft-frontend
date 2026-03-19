@@ -1136,7 +1136,7 @@ export function Step4Concept({ data, onUpdate, onBack, gameContext }: Props) {
                 rows={2}
                 className="mt-1 w-full rounded-md border border-gray-300 px-3 py-1.5 text-sm focus:border-blue-400 focus:outline-none resize-none"
                 placeholder={`Describe ${key} sound...`}
-                value={local.art_direction.sound[key] ?? ""}
+                value={(local.art_direction.sound as Record<string, string>)[key] ?? ""}
                 onChange={(e) =>
                   setLocal({
                     ...local,
@@ -1149,8 +1149,9 @@ export function Step4Concept({ data, onUpdate, onBack, gameContext }: Props) {
               />
               <button
                 onClick={() => {
-                  const { [key]: _, ...rest } = local.art_direction.sound;
-                  setLocal({ ...local, art_direction: { ...local.art_direction, sound: rest as typeof local.art_direction.sound } });
+                  const soundCopy = { ...local.art_direction.sound } as Record<string, string>;
+                  delete soundCopy[key];
+                  setLocal({ ...local, art_direction: { ...local.art_direction, sound: soundCopy as typeof local.art_direction.sound } });
                 }}
                 className="absolute top-0 right-0 text-xs text-red-400 hover:text-red-600"
               >

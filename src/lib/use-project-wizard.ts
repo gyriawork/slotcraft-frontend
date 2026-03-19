@@ -36,7 +36,7 @@ export function useProjectWizard(projectId: string) {
         useWizardStore.setState({
           currentStep: typeof sd.currentStep === "number" ? (sd.currentStep as number) : 1,
           completedSteps: (sd.completedSteps as number[]) ?? [],
-          stepValidity: (sd.stepValidity as Record<number, string>) ?? {},
+          stepValidity: (sd.stepValidity ?? {}) as Record<number, "valid" | "stale">,
           step1: (sd.step1 as ReturnType<typeof useWizardStore.getState>["step1"]) ?? null,
           step2: (sd.step2 as ReturnType<typeof useWizardStore.getState>["step2"]) ?? null,
           step3: (sd.step3 as ReturnType<typeof useWizardStore.getState>["step3"]) ?? null,

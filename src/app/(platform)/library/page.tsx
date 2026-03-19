@@ -198,7 +198,7 @@ export default function LibraryPage() {
     setBulkLoading(true);
     try {
       await Promise.all(
-        Array.from(selectedIds).map((id) => api.library.update(id, { status: "archived" } as Record<string, unknown>))
+        Array.from(selectedIds).map((id) => api.library.update(id, { status: "archived" }))
       );
       clearSelection();
       fetchData();
@@ -225,7 +225,7 @@ export default function LibraryPage() {
           created_by: createdBy, team: teamName || undefined,
         },
         status: "concept",
-      } as Record<string, unknown>);
+      });
       setShowAddGame(false);
       setAddGameForm({ name: "", game_type: "slot", brand: "", rtp: "", volatility: "", theme: "" });
       fetchData();
