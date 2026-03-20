@@ -56,6 +56,7 @@ export default function NewGamePage() {
         stepValidity={stepValidity}
       />
       <div className="flex-1 overflow-y-auto p-6">
+        <div className="mx-auto max-w-3xl">
         {stepValidity[currentStep] === "stale" && (
           <div
             className="mb-4 rounded-lg border px-4 py-3"
@@ -153,6 +154,7 @@ export default function NewGamePage() {
             onBack={() => setCurrentStep(8)}
           />
         )}
+        </div>
       </div>
     </div>
   );

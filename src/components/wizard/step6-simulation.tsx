@@ -214,12 +214,12 @@ export function Step6Simulation({ step1, step2, step3, step5, data, onUpdate, on
   }
 
   return (
-    <div className="mx-auto max-w-4xl space-y-6">
+    <div className="space-y-4">
       {/* Controls */}
-      <section className="rounded-lg border border-gray-200 bg-white p-4">
+      <section className="section-card">
         <div className="flex items-center justify-between gap-4">
           <div>
-            <h3 className="text-sm font-semibold text-gray-900">Monte Carlo Simulation</h3>
+            <h3 className="section-title">Monte Carlo Simulation</h3>
             <p className="mt-0.5 text-xs text-gray-500">
               Verify math model with WASM engine running in your browser
             </p>
@@ -243,7 +243,7 @@ export function Step6Simulation({ step1, step2, step3, step5, data, onUpdate, on
             <button
               onClick={handleRun}
               disabled={!canRun || status === "running"}
-              className="rounded-md bg-blue-600 px-5 py-2 text-sm font-medium text-white hover:bg-blue-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+              className="btn btn-solid btn-lg"
             >
               {status === "running" ? "Running..." : "Run Simulation"}
             </button>
@@ -336,10 +336,10 @@ export function Step6Simulation({ step1, step2, step3, step5, data, onUpdate, on
 
       {/* Server-side verification */}
       {(result || data) && (
-        <section className="rounded-lg border border-gray-200 bg-white p-4">
+        <section className="section-card">
           <div className="flex items-center justify-between">
             <div>
-              <h3 className="text-sm font-semibold text-gray-900">Server-Side Verification</h3>
+              <h3 className="section-title">Server-Side Verification</h3>
               <p className="mt-0.5 text-xs text-gray-500">
                 Run a high-accuracy simulation on the server (up to 10M spins)
               </p>
@@ -400,7 +400,7 @@ export function Step6Simulation({ step1, step2, step3, step5, data, onUpdate, on
       <div className="flex justify-between border-t border-gray-200 pt-6">
         <button
           onClick={onBack}
-          className="rounded-md border border-gray-300 bg-white px-6 py-2.5 text-sm font-medium text-gray-700 hover:bg-gray-50 transition-colors"
+          className="btn btn-secondary"
         >
           Back
         </button>
@@ -476,8 +476,8 @@ function SimulationResults({
       </div>
 
       {/* Win Distribution */}
-      <section className="rounded-lg border border-gray-200 bg-white p-4">
-        <h4 className="text-sm font-semibold text-gray-900 mb-3">Win Distribution</h4>
+      <section className="section-card">
+        <h4 className="section-title">Win Distribution</h4>
         <div className="flex items-end gap-1" style={{ height: 120 }}>
           {result.distribution_buckets.map((count, i) => {
             const maxCount = Math.max(...result.distribution_buckets, 1);
@@ -573,8 +573,8 @@ function ConvergenceChart({
   }
 
   return (
-    <section className="mt-4 rounded-lg border border-gray-200 bg-white p-4">
-      <h4 className="text-sm font-semibold text-gray-900 mb-2">RTP Convergence</h4>
+    <section className="mt-4 section-card">
+      <h4 className="section-title">RTP Convergence</h4>
       <svg viewBox={`0 0 ${W} ${H}`} className="w-full" style={{ maxHeight: 200 }}>
         {/* Grid lines */}
         {yTicks.map((tick) => (

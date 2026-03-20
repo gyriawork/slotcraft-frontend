@@ -115,6 +115,7 @@ export default function ProjectWizardPage() {
       )}
 
       <div className="flex-1 overflow-y-auto p-6" style={{ background: "var(--bg)", position: "relative" }}>
+        <div className="mx-auto max-w-3xl">
         {/* Step header */}
         <div className="mb-5 flex items-start justify-between">
           <div>
@@ -148,6 +149,7 @@ export default function ProjectWizardPage() {
           {currentStep === 7 && step1 && <Step7Prototype step1={step1} step2={step2} step3={step3} step5={step5} data={step7 ?? undefined} onUpdate={setStep7} onBack={() => setCurrentStep(6)} />}
           {currentStep === 8 && step1 && <Step8Rules step1={step1} step2={step2} step3={step3} step4={step4} step5={step5} step6={step6} data={step8 ?? undefined} onUpdate={setStep8} onBack={() => setCurrentStep(7)} />}
           {currentStep === 9 && step1 && <Step9Export step1={step1} step2={step2} step3={step3} step4={step4} step5={step5} step6={step6} step7={step7} data={step9 ?? undefined} onUpdate={setStep9} onBack={() => setCurrentStep(8)} />}
+        </div>
         </div>
       </div>
 

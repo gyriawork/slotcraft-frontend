@@ -318,7 +318,7 @@ export function Step8Rules({
   ];
 
   return (
-    <div className="mx-auto max-w-5xl space-y-5">
+    <div className="space-y-4">
       {/* Header */}
       <div className="flex items-center justify-between">
         <p className="text-[13px]" style={{ color: "var(--text2)" }}>
@@ -327,15 +327,13 @@ export function Step8Rules({
         <div className="flex items-center gap-2">
           <button
             onClick={onBack}
-            className="rounded-md px-4 py-[7px] text-[12px] font-medium cursor-pointer"
-            style={{ border: "0.5px solid var(--border)", color: "var(--text2)" }}
+            className="btn btn-secondary"
           >
             Back
           </button>
           <button
             onClick={save}
-            className="rounded-md px-4 py-[7px] text-[12px] font-medium cursor-pointer"
-            style={{ background: "var(--accent-soft)", border: "0.5px solid var(--accent-border)", color: "var(--accent)" }}
+            className="btn btn-solid btn-lg"
           >
             Save & Continue
           </button>

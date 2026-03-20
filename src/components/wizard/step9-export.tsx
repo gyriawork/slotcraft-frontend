@@ -127,7 +127,7 @@ export function Step9Export({
   }, []);
 
   return (
-    <div className="mx-auto max-w-5xl space-y-6">
+    <div className="space-y-4">
       {/* Header */}
       <div className="flex items-center justify-between">
         <div>
@@ -138,7 +138,7 @@ export function Step9Export({
         </div>
         <button
           onClick={onBack}
-          className="rounded-md border border-gray-300 bg-white px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50"
+          className="btn btn-secondary"
         >
           Back
         </button>
@@ -168,9 +168,9 @@ export function Step9Export({
       {/* Sub-step 1: Contents / Completeness */}
       {subStep === 1 && (
         <div className="space-y-4">
-          <div className="rounded-lg border border-gray-200 bg-white p-4">
+          <div className="section-card">
             <div className="flex items-center justify-between text-sm">
-              <span className="font-medium text-gray-900">Document Completeness</span>
+              <span className="section-title" style={{ textTransform: "none", letterSpacing: "normal", marginBottom: 0 }}>Document Completeness</span>
               <span className={`font-bold ${completionPct === 100 ? "text-green-600" : "text-amber-600"}`}>
                 {completionPct}% ({readyCount}/{sections.length} sections ready)
               </span>
@@ -245,7 +245,7 @@ export function Step9Export({
                       return (
                         <div
                           key={section.id}
-                          className="flex items-center justify-between rounded-lg border border-gray-200 bg-white p-3"
+                          className="flex items-center justify-between section-card !py-3"
                         >
                           <div className="flex items-center gap-3">
                             {statusDot(status)}
@@ -267,7 +267,7 @@ export function Step9Export({
           <div className="flex justify-end">
             <button
               onClick={() => setSubStep(2)}
-              className="rounded-md bg-blue-600 px-4 py-2 text-sm font-medium text-white hover:bg-blue-700"
+              className="btn btn-solid btn-lg"
             >
               Preview & Edit
             </button>
@@ -302,7 +302,7 @@ export function Step9Export({
             {visibleSections.map((section) => (
               <div
                 key={section.id}
-                className="rounded-lg border border-gray-200 bg-white"
+                className="section-card !p-0"
               >
                 <div className="flex items-center justify-between border-b border-gray-100 px-4 py-2">
                   <h3 className="text-sm font-semibold text-gray-900">{section.title}</h3>
@@ -334,13 +334,13 @@ export function Step9Export({
           <div className="flex justify-between">
             <button
               onClick={() => setSubStep(1)}
-              className="rounded-md border border-gray-300 bg-white px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50"
+              className="btn btn-secondary"
             >
               Back to Contents
             </button>
             <button
               onClick={() => setSubStep(3)}
-              className="rounded-md bg-blue-600 px-4 py-2 text-sm font-medium text-white hover:bg-blue-700"
+              className="btn btn-solid btn-lg"
             >
               Export
             </button>
@@ -351,8 +351,8 @@ export function Step9Export({
       {/* Sub-step 3: Export */}
       {subStep === 3 && (
         <div className="space-y-6">
-          <div className="rounded-lg border border-gray-200 bg-white p-4">
-            <h3 className="text-sm font-semibold text-gray-900">Export Audience</h3>
+          <div className="section-card">
+            <h3 className="section-title">Export Audience</h3>
             <div className="mt-3 grid grid-cols-2 gap-2 sm:grid-cols-3 lg:grid-cols-5">
               {(Object.keys(AUDIENCE_LABELS) as GddAudience[]).map((aud) => (
                 <button
@@ -371,8 +371,8 @@ export function Step9Export({
             </div>
           </div>
 
-          <div className="rounded-lg border border-gray-200 bg-white p-4">
-            <h3 className="text-sm font-semibold text-gray-900">Export Format</h3>
+          <div className="section-card">
+            <h3 className="section-title">Export Format</h3>
             <p className="mt-1 text-xs text-gray-500">
               File: {exportFileName(gameName, selectedAudience, "pdf")}
             </p>
@@ -406,8 +406,8 @@ export function Step9Export({
           </div>
 
           {/* Attachments */}
-          <div className="rounded-lg border border-gray-200 bg-white p-4">
-            <h3 className="text-sm font-semibold text-gray-900">Data Attachments</h3>
+          <div className="section-card">
+            <h3 className="section-title">Data Attachments</h3>
             <div className="mt-3 grid grid-cols-2 gap-2 sm:grid-cols-4">
               <button
                 disabled={!step5}
@@ -488,8 +488,8 @@ export function Step9Export({
 
           {/* Export history */}
           {exports.length > 0 && (
-            <div className="rounded-lg border border-gray-200 bg-white p-4">
-              <h3 className="text-sm font-semibold text-gray-900">Export History</h3>
+            <div className="section-card">
+              <h3 className="section-title">Export History</h3>
               <div className="mt-2 space-y-1">
                 {exports.map((exp, i) => (
                   <div key={i} className="flex items-center justify-between text-sm">
@@ -508,7 +508,7 @@ export function Step9Export({
           <div className="flex justify-between">
             <button
               onClick={() => setSubStep(2)}
-              className="rounded-md border border-gray-300 bg-white px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50"
+              className="btn btn-secondary"
             >
               Back to Preview
             </button>

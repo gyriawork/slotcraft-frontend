@@ -29,15 +29,6 @@ interface Props {
   };
 }
 
-const SUB_STEPS = [
-  { id: 0, label: "Brief" },
-  { id: 1, label: "Direction" },
-  { id: 2, label: "Theme" },
-  { id: 3, label: "Naming" },
-  { id: 4, label: "Symbols" },
-  { id: 5, label: "Art & Sound" },
-];
-
 const AUDIENCES = ["eu_mainstream", "asia_vip", "latam_casual", "na_mainstream", "nordic"];
 
 const DEFAULT_EMOJIS: Record<string, string> = {
@@ -129,7 +120,6 @@ function initStep4(existing?: Step4Data): Step4Data {
 }
 
 export function Step4Concept({ data, onUpdate, onBack, gameContext }: Props) {
-  const [subStep, setSubStep] = useState(0);
   const [local, setLocal] = useState<Step4Data>(() => initStep4(data));
   const [refInput, setRefInput] = useState("");
   const [loading, setLoading] = useState(false);
@@ -141,25 +131,104 @@ export function Step4Concept({ data, onUpdate, onBack, gameContext }: Props) {
   const [iterInput, setIterInput] = useState("");
   const [emojiPicker, setEmojiPicker] = useState<string | null>(null);
 
-  const markSubComplete = useCallback(
-    (idx: number) => {
-      const updated = { ...local };
-      updated.sub_steps_complete = [...updated.sub_steps_complete];
-      updated.sub_steps_complete[idx] = true;
-      setLocal(updated);
-    },
-    [local]
-  );
-
   const handleSave = useCallback(() => {
     onUpdate(local);
   }, [local, onUpdate]);
 
-  // ── Sub-step 0: Creative Brief ──────────────────────────────────────
-  const renderBrief = () => (
+  async function handleIterate() {
+    if (!iterInput.trim() || loading) return;
+    setLoading(true);
+    try {
+      const result = await api.ai.iterateTheme(iterInput, local.theme, {
+        game_type: gameContext?.game_type,
+        features: gameContext?.features,
+      });
+      setLocal({ ...local, theme: result.theme });
+      setThemeReasoning(result.reasoning || []);
+      setIterInput("");
+    } catch {
+      setLocal({
+        ...local,
+        theme: {
+          ...local.theme,
+          description: `${local.theme.description} [${iterInput}]`,
+        },
+      });
+      setIterInput("");
+    } finally {
+      setLoading(false);
+    }
+  }
+
+  async function handleGenerateConcepts() {
+    setLoading(true);
+    try {
+      const result = await api.ai.generateConcepts(local.brief, gameContext);
+      setAiSource(result.source);
+      setLocal({ ...local, concepts: result.concepts });
+    } catch {
+      const theme = local.brief.theme_input || "Mystical Adventure";
+      const fallback: ConceptCard[] = [
+        { name: `${theme} Rising`, usp: "Check your AI connection.", description: `AI-generated concepts unavailable. Configure your Anthropic API key in Settings.`, reasoning: "—", market_context: "—", badge: "Offline", score: 0 },
+      ];
+      setAiSource("offline");
+      setLocal({ ...local, concepts: fallback });
+    } finally {
+      setLoading(false);
+    }
+  }
+
+  // When a concept is selected, auto-populate theme and naming
+  function selectConcept(concept: SelectedConcept) {
+    const updates: Partial<Step4Data> = { selected_concept: concept };
+    if (concept.name && concept.usp) {
+      updates.theme = {
+        description: `${local.brief.theme_input} — ${concept.usp}`,
+        usp_detail: concept.usp,
+        bonus_narrative: local.theme.bonus_narrative || "",
+      };
+      updates.naming = {
+        ...local.naming,
+        selected: concept.name,
+        alternatives: local.concepts.map((c) => c.name),
+      };
+    }
+    setLocal({ ...local, ...updates });
+  }
+
+  // ── Naming validation ──
+  const nameLen = local.naming.selected.length;
+  const lenColor = nameLen === 0 ? "text-gray-400" : nameLen <= 15 ? "text-green-600" : nameLen <= 25 ? "text-yellow-600" : "text-red-600";
+  const nameHints: Array<{ type: "warning" | "info"; text: string }> = [];
+  const name = local.naming.selected;
+  if (/^(Book of|Rise of|Age of|Reign of)/i.test(name)) {
+    nameHints.push({ type: "warning", text: `Contains common prefix "${name.split(" ").slice(0, 2).join(" ")}" — may feel generic` });
+  }
+  if (name.length > 0 && name.length < 4) {
+    nameHints.push({ type: "info", text: "Very short — may be hard to trademark" });
+  }
+  if (/[^\w\s'-]/i.test(name) && name.length > 0) {
+    nameHints.push({ type: "warning", text: "Contains special characters" });
+  }
+  if (name.length > 25) {
+    nameHints.push({ type: "warning", text: "Long name — may truncate in UI and lobby displays" });
+  }
+
+  return (
     <div className="space-y-4">
-      <div className="rounded-lg border border-gray-200 bg-white p-6 space-y-4">
-        <h3 className="text-base font-semibold text-gray-900">Creative Brief</h3>
+      {/* Back to Step 3 */}
+      <div>
+        <button
+          onClick={onBack}
+          className="btn btn-secondary"
+        >
+          Back to Step 3
+        </button>
+      </div>
+
+      {/* ── Section 1: Creative Brief ──────────────────────────────────── */}
+      <div className="section-card space-y-4">
+        <h3 className="section-title">Creative Brief</h3>
 
         {/* Theme / Setting */}
         <div>
@@ -175,7 +244,7 @@ export function Step4Concept({ data, onUpdate, onBack, gameContext }: Props) {
           />
         </div>
 
-        {/* Creative Vision — replaces mood chips */}
+        {/* Creative Vision */}
         <div>
           <label className="block text-sm font-medium text-gray-700">Creative Vision</label>
           <textarea
@@ -190,7 +259,7 @@ export function Step4Concept({ data, onUpdate, onBack, gameContext }: Props) {
           <p className="mt-1 text-xs text-gray-400">The more detail you provide, the better AI suggestions will be.</p>
         </div>
 
-        {/* Reference Games — kept */}
+        {/* Reference Games */}
         <div>
           <label className="block text-sm font-medium text-gray-700">Reference Games</label>
           <div className="mt-2 flex gap-2">
@@ -345,179 +414,116 @@ export function Step4Concept({ data, onUpdate, onBack, gameContext }: Props) {
         </div>
       </div>
 
-      <div className="flex justify-between">
-        <button
-          onClick={onBack}
-          className="rounded-md border border-gray-300 bg-white px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50"
-        >
-          Back to Step 3
-        </button>
-        <button
-          onClick={async () => {
-            setLoading(true);
-            try {
-              const result = await api.ai.generateConcepts(local.brief, gameContext);
-              setAiSource(result.source);
-              markSubComplete(0);
-              setLocal({ ...local, concepts: result.concepts });
-              setSubStep(1);
-            } catch {
-              const theme = local.brief.theme_input || "Mystical Adventure";
-              const fallback: ConceptCard[] = [
-                { name: `${theme} Rising`, usp: "Check your AI connection.", description: `AI-generated concepts unavailable. Configure your Anthropic API key in Settings.`, reasoning: "—", market_context: "—", badge: "Offline", score: 0 },
-              ];
-              setAiSource("offline");
-              markSubComplete(0);
-              setLocal({ ...local, concepts: fallback });
-              setSubStep(1);
-            } finally {
-              setLoading(false);
-            }
-          }}
-          disabled={!local.brief.theme_input.trim() || loading}
-          className="rounded-md bg-blue-600 px-4 py-2 text-sm font-medium text-white hover:bg-blue-700 disabled:opacity-50"
-        >
-          {loading ? "Generating..." : "Generate Concepts"}
-        </button>
-      </div>
-    </div>
-  );
+      {/* ── Section 2: AI Concept Generation ──────────────────────────── */}
+      <div className="section-card space-y-4">
+        <h3 className="section-title">AI Concept Generation</h3>
 
-  // ── Sub-step 1: Pick Direction ──────────────────────────────────────
-  const renderDirection = () => (
-    <div className="space-y-4">
-      {aiSource && (
-        <p className="text-xs text-gray-400">
-          Generated via {aiSource === "ai" ? "Claude AI" : aiSource === "fallback" ? "fallback (no API key)" : "offline mode"}
-        </p>
-      )}
-      <div className="grid gap-4 sm:grid-cols-3">
-        {local.concepts.map((concept, i) => {
-          const isSelected = local.selected_concept?.source === "ai_generated" && local.selected_concept.index === i;
-          return (
-            <button
-              key={i}
-              onClick={() =>
-                setLocal({
-                  ...local,
-                  selected_concept: { source: "ai_generated", index: i, name: concept.name, usp: concept.usp },
-                })
-              }
-              className={`rounded-lg border-2 p-4 text-left transition-colors ${
-                isSelected
-                  ? "border-blue-500 bg-blue-50"
-                  : "border-gray-200 bg-white hover:border-gray-300"
-              }`}
-            >
-              {concept.badge && (
-                <span className="mb-2 inline-block rounded-full bg-purple-100 px-2 py-0.5 text-xs font-medium text-purple-700">
-                  {concept.badge}
-                </span>
-              )}
-              <h4 className="font-semibold text-gray-900">{concept.name}</h4>
-              <p className="mt-1 text-xs text-gray-600">{concept.usp}</p>
-              <p className="mt-2 text-xs text-gray-500">{concept.description}</p>
+        <div className="flex items-center gap-3">
+          <button
+            onClick={handleGenerateConcepts}
+            disabled={!local.brief.theme_input.trim() || loading}
+            className="rounded-md bg-blue-600 px-4 py-2 text-sm font-medium text-white hover:bg-blue-700 disabled:opacity-50"
+          >
+            {loading && local.concepts.length === 0 ? "Generating..." : "Generate Concepts"}
+          </button>
+          {aiSource && (
+            <p className="text-xs text-gray-400">
+              Generated via {aiSource === "ai" ? "Claude AI" : aiSource === "fallback" ? "fallback (no API key)" : "offline mode"}
+            </p>
+          )}
+        </div>
 
-              {/* AI Reasoning — new */}
-              {concept.reasoning && (
-                <p className="mt-2 text-xs italic text-gray-400 border-t border-gray-100 pt-2">
-                  {concept.reasoning}
-                </p>
-              )}
+        {/* Concept cards */}
+        {local.concepts.length > 0 && (
+          <div className="grid gap-4 sm:grid-cols-3">
+            {local.concepts.map((concept, i) => {
+              const isSelected = local.selected_concept?.source === "ai_generated" && local.selected_concept.index === i;
+              return (
+                <button
+                  key={i}
+                  onClick={() =>
+                    selectConcept({ source: "ai_generated", index: i, name: concept.name, usp: concept.usp })
+                  }
+                  className={`rounded-lg border-2 p-4 text-left transition-colors ${
+                    isSelected
+                      ? "border-blue-500 bg-blue-50"
+                      : "border-gray-200 bg-white hover:border-gray-300"
+                  }`}
+                >
+                  {concept.badge && (
+                    <span className="mb-2 inline-block rounded-full bg-purple-100 px-2 py-0.5 text-xs font-medium text-purple-700">
+                      {concept.badge}
+                    </span>
+                  )}
+                  <h4 className="font-semibold text-gray-900">{concept.name}</h4>
+                  <p className="mt-1 text-xs text-gray-600">{concept.usp}</p>
+                  <p className="mt-2 text-xs text-gray-500">{concept.description}</p>
 
-              {/* Market context — new */}
-              {concept.market_context && (
-                <p className="mt-1 text-[11px] text-purple-500">
-                  📊 {concept.market_context}
-                </p>
-              )}
+                  {/* AI Reasoning */}
+                  {concept.reasoning && (
+                    <p className="mt-2 text-xs italic text-gray-400 border-t border-gray-100 pt-2">
+                      {concept.reasoning}
+                    </p>
+                  )}
 
-              {concept.score != null && (
-                <div className="mt-3 flex items-center gap-1">
-                  <span className="text-xs text-gray-500">Fit:</span>
-                  <span className={`text-xs font-bold ${concept.score >= 7 ? "text-green-600" : concept.score >= 5 ? "text-yellow-600" : "text-red-600"}`}>
-                    {concept.score}/10
-                  </span>
-                </div>
-              )}
-            </button>
-          );
-        })}
-      </div>
+                  {/* Market context */}
+                  {concept.market_context && (
+                    <p className="mt-1 text-[11px] text-purple-500">
+                      📊 {concept.market_context}
+                    </p>
+                  )}
 
-      {/* Custom concept with AI review */}
-      <div className="rounded-lg border border-gray-200 bg-white p-4">
-        <label className="block text-sm font-medium text-gray-700">Or write your own concept</label>
-        <div className="mt-2 grid gap-2 sm:grid-cols-2">
-          <input
-            type="text"
-            placeholder="Concept name"
-            className="rounded-md border border-gray-300 px-3 py-2 text-sm focus:border-blue-400 focus:outline-none"
-            value={local.selected_concept?.source === "custom" ? local.selected_concept.name : ""}
-            onChange={(e) =>
-              setLocal({
-                ...local,
-                selected_concept: {
+                  {concept.score != null && (
+                    <div className="mt-3 flex items-center gap-1">
+                      <span className="text-xs text-gray-500">Fit:</span>
+                      <span className={`text-xs font-bold ${concept.score >= 7 ? "text-green-600" : concept.score >= 5 ? "text-yellow-600" : "text-red-600"}`}>
+                        {concept.score}/10
+                      </span>
+                    </div>
+                  )}
+                </button>
+              );
+            })}
+          </div>
+        )}
+
+        {/* Custom concept with AI review */}
+        <div className="rounded-lg border border-gray-200 bg-gray-50 p-4">
+          <label className="block text-sm font-medium text-gray-700">Or write your own concept</label>
+          <div className="mt-2 grid gap-2 sm:grid-cols-2">
+            <input
+              type="text"
+              placeholder="Concept name"
+              className="rounded-md border border-gray-300 px-3 py-2 text-sm focus:border-blue-400 focus:outline-none"
+              value={local.selected_concept?.source === "custom" ? local.selected_concept.name : ""}
+              onChange={(e) =>
+                selectConcept({
                   source: "custom",
                   name: e.target.value,
                   usp: local.selected_concept?.source === "custom" ? local.selected_concept.usp : "",
-                },
-              })
-            }
-          />
-          <input
-            type="text"
-            placeholder="Unique selling point"
-            className="rounded-md border border-gray-300 px-3 py-2 text-sm focus:border-blue-400 focus:outline-none"
-            value={local.selected_concept?.source === "custom" ? local.selected_concept.usp : ""}
-            onChange={(e) =>
-              setLocal({
-                ...local,
-                selected_concept: {
+                })
+              }
+            />
+            <input
+              type="text"
+              placeholder="Unique selling point"
+              className="rounded-md border border-gray-300 px-3 py-2 text-sm focus:border-blue-400 focus:outline-none"
+              value={local.selected_concept?.source === "custom" ? local.selected_concept.usp : ""}
+              onChange={(e) =>
+                selectConcept({
                   source: "custom",
                   name: local.selected_concept?.name ?? "",
                   usp: e.target.value,
-                },
-              })
-            }
-          />
+                })
+              }
+            />
+          </div>
         </div>
       </div>
 
-      <div className="flex justify-between">
-        <button onClick={() => setSubStep(0)} className="rounded-md border border-gray-300 bg-white px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50">
-          Back
-        </button>
-        <button
-          onClick={() => {
-            markSubComplete(1);
-            if (local.selected_concept) {
-              setLocal({
-                ...local,
-                theme: {
-                  description: `${local.brief.theme_input} — ${local.selected_concept.usp}`,
-                  usp_detail: local.selected_concept.usp,
-                  bonus_narrative: "",
-                },
-                naming: { ...local.naming, selected: local.selected_concept.name, alternatives: local.concepts.map((c) => c.name) },
-              });
-            }
-            setSubStep(2);
-          }}
-          disabled={!local.selected_concept?.name}
-          className="rounded-md bg-blue-600 px-4 py-2 text-sm font-medium text-white hover:bg-blue-700 disabled:opacity-50"
-        >
-          Next: Theme
-        </button>
-      </div>
-    </div>
-  );
-
-  // ── Sub-step 2: Theme & Narrative — freeform iteration ─────────────
-  const renderTheme = () => (
-    <div className="space-y-4">
-      <div className="rounded-lg border border-gray-200 bg-white p-6 space-y-4">
-        <h3 className="text-base font-semibold text-gray-900">Theme & Narrative</h3>
+      {/* ── Section 3: Theme & Narrative ──────────────────────────────── */}
+      <div className="section-card space-y-4">
+        <h3 className="section-title">Theme & Narrative</h3>
         <div>
           <label className="block text-sm font-medium text-gray-700">Theme Description</label>
           <textarea
@@ -547,7 +553,7 @@ export function Step4Concept({ data, onUpdate, onBack, gameContext }: Props) {
           />
         </div>
 
-        {/* Freeform AI iteration — replaces fixed chips */}
+        {/* Freeform AI iteration */}
         <div className="pt-3 border-t border-gray-100">
           <label className="block text-sm font-medium text-gray-700 mb-2">Ask AI to adjust</label>
           <div className="flex gap-2">
@@ -573,7 +579,7 @@ export function Step4Concept({ data, onUpdate, onBack, gameContext }: Props) {
           </div>
         </div>
 
-        {/* Theme reasoning — always visible */}
+        {/* Theme reasoning */}
         {themeReasoning.length > 0 && (
           <div className="rounded-lg border border-purple-100 bg-purple-50/50 p-4">
             <span className="text-xs font-semibold text-purple-700">AI Reasoning — Mechanic ↔ Theme Mapping</span>
@@ -587,187 +593,113 @@ export function Step4Concept({ data, onUpdate, onBack, gameContext }: Props) {
           </div>
         )}
       </div>
-      <div className="flex justify-between">
-        <button onClick={() => setSubStep(1)} className="rounded-md border border-gray-300 bg-white px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50">Back</button>
-        <button
-          onClick={() => { markSubComplete(2); setSubStep(3); }}
-          disabled={!local.theme.description.trim()}
-          className="rounded-md bg-blue-600 px-4 py-2 text-sm font-medium text-white hover:bg-blue-700 disabled:opacity-50"
-        >
-          Next: Naming
-        </button>
-      </div>
-    </div>
-  );
 
-  async function handleIterate() {
-    if (!iterInput.trim() || loading) return;
-    setLoading(true);
-    try {
-      const result = await api.ai.iterateTheme(iterInput, local.theme, {
-        game_type: gameContext?.game_type,
-        features: gameContext?.features,
-      });
-      setLocal({ ...local, theme: result.theme });
-      setThemeReasoning(result.reasoning || []);
-      setIterInput("");
-    } catch {
-      setLocal({
-        ...local,
-        theme: {
-          ...local.theme,
-          description: `${local.theme.description} [${iterInput}]`,
-        },
-      });
-      setIterInput("");
-    } finally {
-      setLoading(false);
-    }
-  }
-
-  // ── Sub-step 3: Naming — with reasoning + validation ───────────────
-  const renderNaming = () => {
-    const nameLen = local.naming.selected.length;
-    const lenColor = nameLen === 0 ? "text-gray-400" : nameLen <= 15 ? "text-green-600" : nameLen <= 25 ? "text-yellow-600" : "text-red-600";
-
-    // Validation hints
-    const hints: Array<{ type: "warning" | "info"; text: string }> = [];
-    const name = local.naming.selected;
-    if (/^(Book of|Rise of|Age of|Reign of)/i.test(name)) {
-      hints.push({ type: "warning", text: `Contains common prefix "${name.split(" ").slice(0, 2).join(" ")}" — may feel generic` });
-    }
-    if (name.length > 0 && name.length < 4) {
-      hints.push({ type: "info", text: "Very short — may be hard to trademark" });
-    }
-    if (/[^\w\s'-]/i.test(name) && name.length > 0) {
-      hints.push({ type: "warning", text: "Contains special characters" });
-    }
-    if (name.length > 25) {
-      hints.push({ type: "warning", text: "Long name — may truncate in UI and lobby displays" });
-    }
-
-    return (
-      <div className="space-y-4">
-        <div className="rounded-lg border border-gray-200 bg-white p-6 space-y-4">
-          <h3 className="text-base font-semibold text-gray-900">Game Name</h3>
-          <div>
-            <label className="block text-sm font-medium text-gray-700">Selected Name</label>
-            <input
-              type="text"
-              className="mt-1 w-full rounded-md border border-gray-300 px-3 py-2 text-sm focus:border-blue-400 focus:outline-none"
-              value={local.naming.selected}
-              onChange={(e) => setLocal({ ...local, naming: { ...local.naming, selected: e.target.value } })}
-            />
-            <div className="mt-1 flex items-center gap-3">
-              <span className={`text-xs font-medium ${lenColor}`}>
-                {nameLen} characters
-                {nameLen <= 15 && nameLen > 0 && " ✓"}
-              </span>
-              {/* Color bar indicator */}
-              <div className="flex-1 h-1.5 rounded-full bg-gray-100 overflow-hidden max-w-[120px]">
-                <div
-                  className="h-full rounded-full transition-all"
-                  style={{
-                    width: `${Math.min(100, (nameLen / 30) * 100)}%`,
-                    backgroundColor:
-                      nameLen <= 15 ? "var(--green, #22c55e)" :
-                      nameLen <= 25 ? "var(--amber, #f59e0b)" :
-                      "var(--red, #ef4444)",
-                  }}
-                />
-              </div>
+      {/* ── Section 4: Naming ─────────────────────────────────────────── */}
+      <div className="section-card space-y-4">
+        <h3 className="section-title">Game Name</h3>
+        <div>
+          <label className="block text-sm font-medium text-gray-700">Selected Name</label>
+          <input
+            type="text"
+            className="mt-1 w-full rounded-md border border-gray-300 px-3 py-2 text-sm focus:border-blue-400 focus:outline-none"
+            value={local.naming.selected}
+            onChange={(e) => setLocal({ ...local, naming: { ...local.naming, selected: e.target.value } })}
+          />
+          <div className="mt-1 flex items-center gap-3">
+            <span className={`text-xs font-medium ${lenColor}`}>
+              {nameLen} characters
+              {nameLen <= 15 && nameLen > 0 && " ✓"}
+            </span>
+            {/* Color bar indicator */}
+            <div className="flex-1 h-1.5 rounded-full bg-gray-100 overflow-hidden max-w-[120px]">
+              <div
+                className="h-full rounded-full transition-all"
+                style={{
+                  width: `${Math.min(100, (nameLen / 30) * 100)}%`,
+                  backgroundColor:
+                    nameLen <= 15 ? "var(--green, #22c55e)" :
+                    nameLen <= 25 ? "var(--amber, #f59e0b)" :
+                    "var(--red, #ef4444)",
+                }}
+              />
             </div>
-
-            {/* Validation hints */}
-            {hints.length > 0 && (
-              <div className="mt-2 space-y-1">
-                {hints.map((h, i) => (
-                  <p key={i} className={`text-xs flex items-center gap-1 ${h.type === "warning" ? "text-yellow-600" : "text-gray-500"}`}>
-                    {h.type === "warning" ? "⚠️" : "ℹ️"} {h.text}
-                  </p>
-                ))}
-              </div>
-            )}
           </div>
 
-          {/* AI Name Generation */}
-          <div>
-            <button
-              onClick={async () => {
-                if (!local.brief.theme_input.trim()) return;
-                setLoading(true);
-                try {
-                  const res = await api.ai.generateNames({
-                    theme: local.brief.theme_input,
-                    concept_name: local.selected_concept?.name,
-                    mood: local.brief.mood,
-                  });
-                  const names = res.names.map((n) => n.name);
-                  const reasoning: Record<string, string> = {};
-                  res.names.forEach((n) => { reasoning[n.name] = n.reasoning; });
-                  setLocal({
-                    ...local,
-                    naming: { ...local.naming, alternatives: names, reasoning },
-                  });
-                  setAiSource(res.source);
-                } catch {
-                  // Fallback: keep existing
-                } finally {
-                  setLoading(false);
-                }
-              }}
-              disabled={loading || !local.brief.theme_input.trim()}
-              className="rounded-md border border-blue-200 bg-blue-50 px-3 py-1.5 text-xs font-medium text-blue-700 hover:bg-blue-100 disabled:opacity-50"
-            >
-              {loading ? "Generating..." : "Generate AI Name Suggestions"}
-            </button>
-          </div>
-
-          {/* Name suggestions with reasoning */}
-          {local.naming.alternatives.length > 0 && (
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">Suggestions</label>
-              <div className="space-y-2">
-                {local.naming.alternatives.map((alt, i) => (
-                  <button
-                    key={i}
-                    onClick={() => setLocal({ ...local, naming: { ...local.naming, selected: alt } })}
-                    className={`w-full text-left rounded-lg border p-3 transition-colors ${
-                      alt === local.naming.selected
-                        ? "border-blue-500 bg-blue-50"
-                        : "border-gray-200 bg-white hover:border-gray-300"
-                    }`}
-                  >
-                    <span className="text-sm font-medium text-gray-900">{alt}</span>
-                    {local.naming.reasoning?.[alt] && (
-                      <p className="mt-0.5 text-xs text-gray-500 italic">{local.naming.reasoning[alt]}</p>
-                    )}
-                  </button>
-                ))}
-              </div>
+          {/* Validation hints */}
+          {nameHints.length > 0 && (
+            <div className="mt-2 space-y-1">
+              {nameHints.map((h, i) => (
+                <p key={i} className={`text-xs flex items-center gap-1 ${h.type === "warning" ? "text-yellow-600" : "text-gray-500"}`}>
+                  {h.type === "warning" ? "⚠️" : "ℹ️"} {h.text}
+                </p>
+              ))}
             </div>
           )}
         </div>
-        <div className="flex justify-between">
-          <button onClick={() => setSubStep(2)} className="rounded-md border border-gray-300 bg-white px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50">Back</button>
+
+        {/* AI Name Generation */}
+        <div>
           <button
-            onClick={() => { markSubComplete(3); setSubStep(4); }}
-            disabled={!local.naming.selected.trim()}
-            className="rounded-md bg-blue-600 px-4 py-2 text-sm font-medium text-white hover:bg-blue-700 disabled:opacity-50"
+            onClick={async () => {
+              if (!local.brief.theme_input.trim()) return;
+              setLoading(true);
+              try {
+                const res = await api.ai.generateNames({
+                  theme: local.brief.theme_input,
+                  concept_name: local.selected_concept?.name,
+                  mood: local.brief.mood,
+                });
+                const names = res.names.map((n) => n.name);
+                const reasoning: Record<string, string> = {};
+                res.names.forEach((n) => { reasoning[n.name] = n.reasoning; });
+                setLocal({
+                  ...local,
+                  naming: { ...local.naming, alternatives: names, reasoning },
+                });
+                setAiSource(res.source);
+              } catch {
+                // Fallback: keep existing
+              } finally {
+                setLoading(false);
+              }
+            }}
+            disabled={loading || !local.brief.theme_input.trim()}
+            className="rounded-md border border-blue-200 bg-blue-50 px-3 py-1.5 text-xs font-medium text-blue-700 hover:bg-blue-100 disabled:opacity-50"
           >
-            Next: Symbols
+            {loading ? "Generating..." : "Generate AI Name Suggestions"}
           </button>
         </div>
-      </div>
-    );
-  };
 
-  // ── Sub-step 4: Symbols — emoji, flexible count, holistic review ───
-  const renderSymbols = () => (
-    <div className="space-y-4">
-      <div className="rounded-lg border border-gray-200 bg-white p-6 space-y-3">
+        {/* Name suggestions with reasoning */}
+        {local.naming.alternatives.length > 0 && (
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-2">Suggestions</label>
+            <div className="space-y-2">
+              {local.naming.alternatives.map((alt, i) => (
+                <button
+                  key={i}
+                  onClick={() => setLocal({ ...local, naming: { ...local.naming, selected: alt } })}
+                  className={`w-full text-left rounded-lg border p-3 transition-colors ${
+                    alt === local.naming.selected
+                      ? "border-blue-500 bg-blue-50"
+                      : "border-gray-200 bg-white hover:border-gray-300"
+                  }`}
+                >
+                  <span className="text-sm font-medium text-gray-900">{alt}</span>
+                  {local.naming.reasoning?.[alt] && (
+                    <p className="mt-0.5 text-xs text-gray-500 italic">{local.naming.reasoning[alt]}</p>
+                  )}
+                </button>
+              ))}
+            </div>
+          </div>
+        )}
+      </div>
+
+      {/* ── Section 5: Symbols ────────────────────────────────────────── */}
+      <div className="section-card space-y-3">
         <div className="flex items-center justify-between">
-          <h3 className="text-base font-semibold text-gray-900">Symbol Set ({local.symbols.length})</h3>
+          <h3 className="section-title" style={{ textTransform: "none", letterSpacing: "normal" }}>Symbol Set ({local.symbols.length})</h3>
           {local.symbols.length < 16 && (
             <button
               onClick={() => {
@@ -1001,23 +933,10 @@ export function Step4Concept({ data, onUpdate, onBack, gameContext }: Props) {
           )}
         </div>
       </div>
-      <div className="flex justify-between">
-        <button onClick={() => setSubStep(3)} className="rounded-md border border-gray-300 bg-white px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50">Back</button>
-        <button
-          onClick={() => { markSubComplete(4); setSubStep(5); }}
-          className="rounded-md bg-blue-600 px-4 py-2 text-sm font-medium text-white hover:bg-blue-700"
-        >
-          Next: Art & Sound
-        </button>
-      </div>
-    </div>
-  );
 
-  // ── Sub-step 5: Art & Sound Direction — palette preview + sound gen ─
-  const renderArt = () => (
-    <div className="space-y-4">
-      <div className="rounded-lg border border-gray-200 bg-white p-6 space-y-4">
-        <h3 className="text-base font-semibold text-gray-900">Art Direction</h3>
+      {/* ── Section 6: Art & Sound Direction ──────────────────────────── */}
+      <div className="section-card space-y-4">
+        <h3 className="section-title">Art Direction</h3>
         <div>
           <label className="block text-sm font-medium text-gray-700">Art Style Description</label>
           <textarea
@@ -1071,9 +990,9 @@ export function Step4Concept({ data, onUpdate, onBack, gameContext }: Props) {
         </div>
       </div>
 
-      <div className="rounded-lg border border-gray-200 bg-white p-6 space-y-4">
+      <div className="section-card space-y-4">
         <div className="flex items-center justify-between">
-          <h3 className="text-base font-semibold text-gray-900">Sound Direction</h3>
+          <h3 className="section-title">Sound Direction</h3>
           <button
             onClick={async () => {
               setLoading(true);
@@ -1192,49 +1111,15 @@ export function Step4Concept({ data, onUpdate, onBack, gameContext }: Props) {
         </div>
       </div>
 
-      <div className="flex justify-between">
-        <button onClick={() => setSubStep(4)} className="rounded-md border border-gray-300 bg-white px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50">Back</button>
+      {/* ── Bottom navigation ─────────────────────────────────────────── */}
+      <div className="flex justify-end pb-8">
         <button
-          onClick={() => {
-            markSubComplete(5);
-            handleSave();
-          }}
-          className="rounded-md bg-blue-600 px-6 py-2.5 text-sm font-medium text-white hover:bg-blue-700"
+          onClick={handleSave}
+          className="btn btn-solid btn-lg"
         >
           Save & Continue to Math Model
         </button>
       </div>
-    </div>
-  );
-
-  return (
-    <div className="mx-auto max-w-4xl space-y-6">
-      {/* Sub-step nav */}
-      <div className="flex items-center gap-1 rounded-lg bg-gray-100 p-1">
-        {SUB_STEPS.map((ss) => (
-          <button
-            key={ss.id}
-            onClick={() => setSubStep(ss.id)}
-            className={`flex-1 rounded-md px-3 py-1.5 text-xs font-medium transition-colors ${
-              subStep === ss.id
-                ? "bg-white text-gray-900 shadow-sm"
-                : local.sub_steps_complete[ss.id]
-                  ? "text-green-600 hover:text-green-800"
-                  : "text-gray-600 hover:text-gray-900"
-            }`}
-          >
-            {local.sub_steps_complete[ss.id] && "✓ "}
-            4.{ss.id + 1} {ss.label}
-          </button>
-        ))}
-      </div>
-
-      {subStep === 0 && renderBrief()}
-      {subStep === 1 && renderDirection()}
-      {subStep === 2 && renderTheme()}
-      {subStep === 3 && renderNaming()}
-      {subStep === 4 && renderSymbols()}
-      {subStep === 5 && renderArt()}
     </div>
   );
 }

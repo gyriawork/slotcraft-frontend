@@ -180,13 +180,13 @@ export function Step3Features({ data, onUpdate, onBack, markets = [], marketCons
   }, [fullCatalog]);
 
   return (
-    <div className="mx-auto max-w-3xl space-y-8">
+    <div className="space-y-4">
       {/* Feature categories */}
       {categories.map((cat) => {
         const features = fullCatalog.filter((f) => f.type === cat);
         return (
-          <section key={cat}>
-            <h3 className="text-sm font-semibold mb-3" style={{ color: "var(--text)" }}>
+          <section key={cat} className="section-card">
+            <h3 className="section-title">
               {CATEGORY_LABELS[cat]}
             </h3>
             <div className="grid grid-cols-1 gap-2 sm:grid-cols-2">
@@ -284,7 +284,7 @@ export function Step3Features({ data, onUpdate, onBack, markets = [], marketCons
       })}
 
       {/* Complexity meter */}
-      <section className="rounded-lg border p-4" style={{ borderColor: "var(--border)", background: "var(--surface)" }}>
+      <section className="section-card">
         <div className="flex items-center justify-between">
           <div>
             <span className="text-sm font-semibold" style={{ color: "var(--text)" }}>
@@ -313,16 +313,14 @@ export function Step3Features({ data, onUpdate, onBack, markets = [], marketCons
       <div className="flex justify-between border-t pt-6" style={{ borderColor: "var(--border)" }}>
         <button
           onClick={onBack}
-          className="rounded-md border px-6 py-2.5 text-sm font-medium transition-colors"
-          style={{ borderColor: "var(--border)", background: "var(--surface)", color: "var(--text2)" }}
+          className="btn btn-secondary"
         >
           Back
         </button>
         <button
           onClick={handleSave}
           disabled={selected.length === 0}
-          className="rounded-md px-6 py-2.5 text-sm font-medium text-white transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
-          style={{ background: "var(--accent)" }}
+          className="btn btn-solid btn-lg disabled:opacity-50 disabled:cursor-not-allowed"
         >
           Save & Continue
         </button>

@@ -13,10 +13,10 @@ import type {
   BetConfig,
 } from "@/lib/wizard-types";
 
-const GAME_TYPES: { value: GameType; label: string; description: string }[] = [
-  { value: "slot", label: "Slot", description: "Video slots, classic slots, megaways" },
-  { value: "crash", label: "Crash", description: "Crash games like Aviator" },
-  { value: "table", label: "Table", description: "Roulette, blackjack, baccarat" },
+const GAME_TYPES: { value: GameType; label: string; description: string; icon: string; gradient: string }[] = [
+  { value: "slot", label: "Slot", description: "Video slots, classic slots, megaways", icon: "S", gradient: "linear-gradient(135deg, #7c6bf5, #a78bfa)" },
+  { value: "crash", label: "Crash", description: "Crash games like Aviator", icon: "C", gradient: "linear-gradient(135deg, #f59e0b, #ef4444)" },
+  { value: "table", label: "Table", description: "Roulette, blackjack, baccarat", icon: "T", gradient: "linear-gradient(135deg, #10b981, #06b6d4)" },
 ];
 
 const SLOT_VARIANTS: { value: SlotVariant; label: string }[] = [
@@ -150,10 +150,10 @@ export function Step1Setup({ data, onUpdate, projectId, projectDates }: Step1Set
   }
 
   return (
-    <div className="mx-auto max-w-3xl space-y-8">
+    <div className="space-y-4">
       {/* Project Timeline — shown first */}
-      <section>
-        <h3 className="text-sm font-semibold text-gray-900 mb-3">Project Timeline</h3>
+      <section className="section-card">
+        <h3 className="section-title">Project Timeline</h3>
         <div className="grid grid-cols-2 gap-4">
           {([
             ["development_start", "Development start"],
@@ -176,21 +176,32 @@ export function Step1Setup({ data, onUpdate, projectId, projectDates }: Step1Set
       </section>
 
       {/* Game Type */}
-      <section>
-        <h3 className="text-sm font-semibold text-gray-900 mb-3">Game Type</h3>
+      <section className="section-card">
+        <h3 className="section-title">Game Type</h3>
         <div className="grid grid-cols-3 gap-3">
           {GAME_TYPES.map((type) => (
             <button
               key={type.value}
               onClick={() => handleGameTypeChange(type.value)}
-              className={`rounded-lg border-2 p-4 text-left transition-colors ${
-                gameType === type.value
-                  ? "border-blue-600 bg-blue-50"
-                  : "border-gray-200 bg-white hover:border-gray-300"
-              }`}
+              className="rounded-lg border p-4 text-left transition-all"
+              style={{
+                borderColor: gameType === type.value ? "var(--accent)" : "var(--border)",
+                background: gameType === type.value ? "var(--accent-soft)" : "var(--bg3)",
+                boxShadow: gameType === type.value ? "0 0 0 1px var(--accent-border), 0 2px 8px rgba(124, 107, 245, 0.15)" : "none",
+              }}
             >
-              <div className="text-sm font-medium text-gray-900">{type.label}</div>
-              <div className="mt-1 text-xs text-gray-500">{type.description}</div>
+              <div className="mb-2 flex items-center gap-2.5">
+                <span
+                  className="flex h-7 w-7 shrink-0 items-center justify-center rounded-md text-[11px] font-bold text-white"
+                  style={{ background: type.gradient }}
+                >
+                  {type.icon}
+                </span>
+                <span className="text-[14px] font-medium" style={{ color: gameType === type.value ? "var(--accent)" : "var(--text)" }}>
+                  {type.label}
+                </span>
+              </div>
+              <div className="text-[11px]" style={{ color: "var(--text3)" }}>{type.description}</div>
             </button>
           ))}
         </div>
@@ -200,8 +211,8 @@ export function Step1Setup({ data, onUpdate, projectId, projectDates }: Step1Set
       {gameType === "slot" && (
         <>
           {/* Variant */}
-          <section>
-            <h3 className="text-sm font-semibold text-gray-900 mb-3">Slot Variant</h3>
+          <section className="section-card">
+            <h3 className="section-title">Slot Variant</h3>
             <div className="flex flex-wrap gap-2">
               {SLOT_VARIANTS.map((v) => (
                 <button
@@ -229,8 +240,8 @@ export function Step1Setup({ data, onUpdate, projectId, projectDates }: Step1Set
           </section>
 
           {/* Grid */}
-          <section>
-            <h3 className="text-sm font-semibold text-gray-900 mb-3">Grid Size</h3>
+          <section className="section-card">
+            <h3 className="section-title">Grid Size</h3>
             <div className="flex gap-8">
               <div>
                 <label className="block text-xs text-gray-500 mb-2">Reels</label>
@@ -297,8 +308,8 @@ export function Step1Setup({ data, onUpdate, projectId, projectDates }: Step1Set
 
           {/* Win Mechanic */}
           {variant !== "cluster" && (
-            <section>
-              <h3 className="text-sm font-semibold text-gray-900 mb-3">Win Mechanic</h3>
+            <section className="section-card">
+              <h3 className="section-title">Win Mechanic</h3>
               <div className="flex flex-wrap gap-2">
                 {WIN_MECHANICS.filter((m) => variant !== "megaways" || m.value === "all_ways").map(
                   (m) => (
@@ -321,8 +332,8 @@ export function Step1Setup({ data, onUpdate, projectId, projectDates }: Step1Set
 
           {/* Paylines */}
           {(winMechanic === "fixed_paylines" || winMechanic === "adjustable_paylines") && (
-            <section>
-              <h3 className="text-sm font-semibold text-gray-900 mb-3">
+            <section className="section-card">
+              <h3 className="section-title" style={{ textTransform: "none", letterSpacing: "normal" }}>
                 Paylines: <span className="font-mono">{paylines}</span>
               </h3>
               <input
@@ -346,8 +357,8 @@ export function Step1Setup({ data, onUpdate, projectId, projectDates }: Step1Set
           )}
 
           {/* Bet Range */}
-          <section>
-            <h3 className="text-sm font-semibold text-gray-900 mb-3">Bet Range ({(() => { try { const s = typeof window !== "undefined" ? localStorage.getItem("reelspec_settings") : null; return s ? JSON.parse(s).baseCurrency || "EUR" : "EUR"; } catch { return "EUR"; } })()})</h3>
+          <section className="section-card">
+            <h3 className="section-title" style={{ textTransform: "none", letterSpacing: "normal" }}>Bet Range ({(() => { try { const s = typeof window !== "undefined" ? localStorage.getItem("reelspec_settings") : null; return s ? JSON.parse(s).baseCurrency || "EUR" : "EUR"; } catch { return "EUR"; } })()})</h3>
             <div className="grid grid-cols-3 gap-4">
               <div>
                 <label className="block text-xs text-gray-500 mb-1">Min Bet</label>
@@ -398,19 +409,19 @@ export function Step1Setup({ data, onUpdate, projectId, projectDates }: Step1Set
 
       {/* Crash / Table placeholders */}
       {gameType === "crash" && (
-        <section className="rounded-lg border border-dashed border-gray-300 bg-white p-8 text-center">
-          <p className="text-sm text-gray-500">Crash game configuration coming in Phase 2</p>
+        <section className="section-card" style={{ borderStyle: "dashed", textAlign: "center" }}>
+          <p style={{ color: "var(--text3)", fontSize: 13 }}>Crash game configuration coming in Phase 2</p>
         </section>
       )}
       {gameType === "table" && (
-        <section className="rounded-lg border border-dashed border-gray-300 bg-white p-8 text-center">
-          <p className="text-sm text-gray-500">Table game configuration coming in Phase 2</p>
+        <section className="section-card" style={{ borderStyle: "dashed", textAlign: "center" }}>
+          <p style={{ color: "var(--text3)", fontSize: 13 }}>Table game configuration coming in Phase 2</p>
         </section>
       )}
 
       {/* Target Markets */}
-      <section>
-        <h3 className="text-sm font-semibold text-gray-900 mb-3">Target Markets</h3>
+      <section className="section-card">
+        <h3 className="section-title">Target Markets</h3>
         <div className="flex flex-wrap gap-2">
           {MARKETS.map((m) => (
             <button
@@ -442,11 +453,8 @@ export function Step1Setup({ data, onUpdate, projectId, projectDates }: Step1Set
       </section>
 
       {/* Save / Continue */}
-      <div className="flex justify-end gap-3 border-t border-gray-200 pt-6">
-        <button
-          onClick={handleSave}
-          className="rounded-md bg-blue-600 px-6 py-2.5 text-sm font-medium text-white hover:bg-blue-700 transition-colors"
-        >
+      <div className="flex justify-end gap-3 pt-4">
+        <button onClick={handleSave} className="btn btn-solid btn-lg">
           Save & Continue
         </button>
       </div>

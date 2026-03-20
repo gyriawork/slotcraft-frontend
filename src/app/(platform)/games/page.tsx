@@ -225,13 +225,7 @@ export default function GamesPage() {
             Manage your game design projects
           </p>
         </div>
-        <button
-          onClick={() => setShowCreate(true)}
-          className="rounded-md px-4 py-[8px] text-[12px] font-semibold transition-colors"
-          style={{ background: "var(--accent-soft)", border: "0.5px solid var(--accent-border)", color: "var(--accent)" }}
-          onMouseEnter={(e) => { e.currentTarget.style.background = "var(--accent)"; e.currentTarget.style.color = "#fff"; }}
-          onMouseLeave={(e) => { e.currentTarget.style.background = "var(--accent-soft)"; e.currentTarget.style.color = "var(--accent)"; }}
-        >
+        <button onClick={() => setShowCreate(true)} className="btn btn-primary">
           + New project
         </button>
       </div>
@@ -315,19 +309,10 @@ export default function GamesPage() {
                 {brands.map((b) => <option key={b.id} value={b.name}>{b.name}</option>)}
               </select>
             )}
-            <button
-              onClick={handleCreate}
-              disabled={!newName.trim() || creating}
-              className="rounded-md px-4 py-2 text-[12px] font-medium border disabled:opacity-40"
-              style={{ background: "var(--accent-soft)", borderColor: "var(--accent-border)", color: "var(--accent)" }}
-            >
+            <button onClick={handleCreate} disabled={!newName.trim() || creating} className="btn btn-primary btn-sm">
               {creating ? "Creating..." : "Create"}
             </button>
-            <button
-              onClick={() => setShowCreate(false)}
-              className="rounded-md px-3 py-2 text-[12px] border"
-              style={{ borderColor: "var(--border)", color: "var(--text2)" }}
-            >
+            <button onClick={() => setShowCreate(false)} className="btn btn-secondary btn-sm">
               Cancel
             </button>
           </div>
@@ -394,11 +379,7 @@ export default function GamesPage() {
           <p className="mt-1 text-[12px]" style={{ color: "var(--text3)" }}>
             Create your first game to get started.
           </p>
-          <button
-            onClick={() => setShowCreate(true)}
-            className="mt-4 rounded-md px-4 py-2 text-[12px] font-medium border"
-            style={{ background: "var(--accent-soft)", borderColor: "var(--accent-border)", color: "var(--accent)" }}
-          >
+          <button onClick={() => setShowCreate(true)} className="btn btn-primary mt-4">
             + New project
           </button>
         </div>
@@ -435,12 +416,14 @@ export default function GamesPage() {
                 return (
                   <tr
                     key={project.id}
-                    className="cursor-pointer transition-colors hover:bg-[var(--surface)]"
+                    className="group cursor-pointer transition-colors"
                     onClick={() => router.push(`/games/${project.id}`)}
                     style={{ height: "44px" }}
+                    onMouseEnter={(e) => { e.currentTarget.style.background = "var(--bg3)"; }}
+                    onMouseLeave={(e) => { e.currentTarget.style.background = "transparent"; }}
                   >
-                    <td className="px-3 py-2.5 font-medium border-b" style={{ color: "var(--text)", borderColor: "var(--border)" }}>
-                      {project.name}
+                    <td className="px-3 py-2.5 border-b" style={{ color: "var(--text)", borderColor: "var(--border)", fontWeight: 500 }}>
+                      <span className="group-hover:underline">{project.name}</span>
                     </td>
                     <td className="px-3 py-2.5 border-b" style={{ color: "var(--text2)", borderColor: "var(--border)" }}>
                       {(project.step_data as Record<string, unknown>)?.brand as string ?? getSettingsField("studioName", "\u2014")}
@@ -471,19 +454,7 @@ export default function GamesPage() {
                       {getSettingsField("teamName", "—")}
                     </td>
                     <td className="px-3 py-2.5 border-b" style={{ borderColor: "var(--border)" }}>
-                      <span
-                        className="text-[11px] font-medium px-2.5 py-1 rounded-full whitespace-nowrap"
-                        style={{
-                          background: completed >= totalSteps
-                            ? "var(--green-soft)" : project.status === "active"
-                            ? "var(--accent-soft)" : project.status === "archived"
-                            ? "var(--red-soft)" : "var(--amber-soft)",
-                          color: completed >= totalSteps
-                            ? "var(--green)" : project.status === "active"
-                            ? "var(--accent)" : project.status === "archived"
-                            ? "var(--red)" : "var(--amber)",
-                        }}
-                      >
+                      <span className={`badge ${completed >= totalSteps ? "badge-success" : project.status === "active" ? "badge-active" : project.status === "archived" ? "badge-draft" : "badge-warning"}`}>
                         {completed >= totalSteps ? "Complete" : project.status === "active" ? "Active" : project.status === "archived" ? "Archived" : "Draft"}
                       </span>
                     </td>

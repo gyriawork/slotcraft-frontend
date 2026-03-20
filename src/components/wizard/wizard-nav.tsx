@@ -17,8 +17,13 @@ export function WizardNav({
 }: WizardNavProps) {
   return (
     <nav
-      className="flex items-center gap-1 overflow-x-auto border-b px-6"
-      style={{ background: "var(--surface)", borderColor: "var(--border)" }}
+      className="flex items-center gap-0.5 overflow-x-auto border-b px-4 scrollbar-hide"
+      style={{
+        background: "var(--surface)",
+        borderColor: "var(--border)",
+        maskImage: "linear-gradient(to right, transparent 0, black 12px, black calc(100% - 12px), transparent 100%)",
+        WebkitMaskImage: "linear-gradient(to right, transparent 0, black 12px, black calc(100% - 12px), transparent 100%)",
+      }}
     >
       {WIZARD_STEPS.map((step) => {
         const isActive = step.number === currentStep;
@@ -32,7 +37,7 @@ export function WizardNav({
             key={step.number}
             onClick={() => isClickable && onStepClick?.(step.number)}
             disabled={!isClickable}
-            className={`flex items-center gap-2 whitespace-nowrap border-b-2 px-4 py-3 text-sm font-medium transition-colors ${
+            className={`flex items-center gap-1.5 whitespace-nowrap border-b-2 px-3 py-2.5 text-[12px] font-medium transition-colors ${
               isClickable ? "cursor-pointer" : "cursor-default"
             }`}
             style={{
@@ -47,7 +52,7 @@ export function WizardNav({
             }}
           >
             <span
-              className="flex h-6 w-6 items-center justify-center rounded-full text-xs"
+              className="flex h-5 w-5 items-center justify-center rounded-full text-[10px]"
               style={{
                 background: isActive
                   ? "var(--accent)"

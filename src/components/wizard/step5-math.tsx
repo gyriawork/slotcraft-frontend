@@ -326,13 +326,13 @@ export function Step5Math({ step1, step2, step3, step4, data, onUpdate, onBack }
 
   if (!step1 || !step2) {
     return (
-      <div className="mx-auto max-w-3xl rounded-lg border border-dashed border-orange-300 bg-orange-50 p-8 text-center">
+      <div className="rounded-lg border border-dashed border-orange-300 bg-orange-50 p-8 text-center">
         <p className="text-sm font-medium text-orange-800">
           Complete Steps 1 and 2 before configuring the math model.
         </p>
         <button
           onClick={onBack}
-          className="mt-4 rounded-md border border-gray-300 bg-white px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50"
+          className="mt-4 btn btn-secondary"
         >
           Go Back
         </button>
@@ -341,7 +341,7 @@ export function Step5Math({ step1, step2, step3, step4, data, onUpdate, onBack }
   }
 
   return (
-    <div className="mx-auto max-w-5xl space-y-6">
+    <div className="space-y-4">
       {/* Sub-step nav */}
       <div className="flex items-center gap-1 rounded-lg bg-gray-100 p-1">
         {SUB_STEPS.map((ss) => (
@@ -385,8 +385,8 @@ export function Step5Math({ step1, step2, step3, step4, data, onUpdate, onBack }
       {/* Sub-step 1: Targets Lock */}
       {subStep === 1 && (
         <div className="space-y-4">
-          <div className="rounded-lg border border-gray-200 bg-white p-6">
-            <h3 className="text-base font-semibold text-gray-900">Targets from Steps 1-2</h3>
+          <div className="section-card">
+            <h3 className="section-title">Targets from Steps 1-2</h3>
             <div className="mt-4 grid grid-cols-2 gap-4 text-sm">
               <div className="rounded-md bg-gray-50 p-3">
                 <span className="text-xs text-gray-500">Game Type</span>
@@ -440,7 +440,7 @@ export function Step5Math({ step1, step2, step3, step4, data, onUpdate, onBack }
             <button
               onClick={handleGenerate}
               disabled={generating}
-              className="rounded-md bg-blue-600 px-6 py-2.5 text-sm font-medium text-white hover:bg-blue-700 disabled:opacity-50"
+              className="btn btn-solid btn-lg disabled:opacity-50"
             >
               {generating ? "Generating..." : "Generate Math Model"}
             </button>
@@ -451,7 +451,7 @@ export function Step5Math({ step1, step2, step3, step4, data, onUpdate, onBack }
       {/* Sub-step 2: RTP Budget */}
       {subStep === 2 && localData && (
         <div className="space-y-4">
-          <div className="rounded-lg border border-gray-200 bg-white p-6">
+          <div className="section-card">
             <RtpBudgetBar
               budget={localData.rtp_budget}
               targetTenths={localData.target_rtp_tenths}
@@ -518,7 +518,7 @@ export function Step5Math({ step1, step2, step3, step4, data, onUpdate, onBack }
           <div className="flex justify-end">
             <button
               onClick={() => setSubStep(3)}
-              className="rounded-md bg-blue-600 px-4 py-2 text-sm font-medium text-white hover:bg-blue-700"
+              className="btn btn-solid btn-lg"
             >
               Next: Paytable
             </button>
@@ -529,7 +529,7 @@ export function Step5Math({ step1, step2, step3, step4, data, onUpdate, onBack }
       {/* Sub-step 3: Paytable */}
       {subStep === 3 && activeVariant && (
         <div className="space-y-4">
-          <div className="rounded-lg border border-gray-200 bg-white p-6">
+          <div className="section-card">
             <PaytableEditor
               rows={activeVariant.paytable}
               onChange={updatePaytable}
@@ -542,13 +542,13 @@ export function Step5Math({ step1, step2, step3, step4, data, onUpdate, onBack }
           <div className="flex justify-between">
             <button
               onClick={() => setSubStep(2)}
-              className="rounded-md border border-gray-300 bg-white px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50"
+              className="btn btn-secondary"
             >
               Back
             </button>
             <button
               onClick={() => setSubStep(4)}
-              className="rounded-md bg-blue-600 px-4 py-2 text-sm font-medium text-white hover:bg-blue-700"
+              className="btn btn-solid btn-lg"
             >
               Next: Reel Strips
             </button>
@@ -559,7 +559,7 @@ export function Step5Math({ step1, step2, step3, step4, data, onUpdate, onBack }
       {/* Sub-step 4: Reel Strips */}
       {subStep === 4 && activeVariant && (
         <div className="space-y-4">
-          <div className="rounded-lg border border-gray-200 bg-white p-6">
+          <div className="section-card">
             <ReelStripEditor
               reelStrips={activeVariant.reel_strips}
               stopsPerReel={activeVariant.stops_per_reel}
@@ -580,13 +580,13 @@ export function Step5Math({ step1, step2, step3, step4, data, onUpdate, onBack }
           <div className="flex justify-between">
             <button
               onClick={() => setSubStep(3)}
-              className="rounded-md border border-gray-300 bg-white px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50"
+              className="btn btn-secondary"
             >
               Back
             </button>
             <button
               onClick={() => setSubStep(5)}
-              className="rounded-md bg-blue-600 px-4 py-2 text-sm font-medium text-white hover:bg-blue-700"
+              className="btn btn-solid btn-lg"
             >
               Next: Verify
             </button>
@@ -597,8 +597,8 @@ export function Step5Math({ step1, step2, step3, step4, data, onUpdate, onBack }
       {/* Sub-step 5: Verify & Save */}
       {subStep === 5 && localData && (
         <div className="space-y-4">
-          <div className="rounded-lg border border-gray-200 bg-white p-6">
-            <h4 className="text-sm font-semibold text-gray-900">Verification</h4>
+          <div className="section-card">
+            <h4 className="section-title">Verification</h4>
             <div className="mt-4 space-y-2">
               {validationSummary.map((check) => (
                 <div
@@ -625,13 +625,13 @@ export function Step5Math({ step1, step2, step3, step4, data, onUpdate, onBack }
           <div className="flex justify-between">
             <button
               onClick={onBack}
-              className="rounded-md border border-gray-300 bg-white px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50"
+              className="btn btn-secondary"
             >
               Back to Step 4
             </button>
             <button
               onClick={handleSave}
-              className="rounded-md bg-blue-600 px-6 py-2.5 text-sm font-medium text-white hover:bg-blue-700"
+              className="btn btn-solid btn-lg"
             >
               Save & Continue to Simulation
             </button>

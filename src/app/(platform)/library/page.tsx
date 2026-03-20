@@ -24,6 +24,26 @@ const STATUS_COLORS: Record<string, { bg: string; text: string }> = {
   concept: { bg: "rgba(156,163,175,0.15)", text: "#9ca3af" },
 };
 
+/* Feature tag color categories */
+const FEATURE_COLORS: Record<string, { bg: string; text: string }> = {
+  Wild: { bg: "rgba(80,160,240,0.12)", text: "#50a0f0" },
+  Scatter: { bg: "rgba(80,160,240,0.12)", text: "#50a0f0" },
+  FS: { bg: "rgba(139,92,246,0.12)", text: "#a78bfa" },
+  "Free Spins": { bg: "rgba(139,92,246,0.12)", text: "#a78bfa" },
+  Multiplier: { bg: "rgba(139,92,246,0.12)", text: "#a78bfa" },
+  "Bonus Buy": { bg: "rgba(139,92,246,0.12)", text: "#a78bfa" },
+  Cascade: { bg: "rgba(61,214,140,0.12)", text: "#3dd68c" },
+  Megaways: { bg: "rgba(61,214,140,0.12)", text: "#3dd68c" },
+  "Cluster Pays": { bg: "rgba(61,214,140,0.12)", text: "#3dd68c" },
+  Expanding: { bg: "rgba(61,214,140,0.12)", text: "#3dd68c" },
+  Social: { bg: "rgba(240,176,64,0.12)", text: "#f0b040" },
+  "VIP Mode": { bg: "rgba(240,176,64,0.12)", text: "#f0b040" },
+  "Side Bet": { bg: "rgba(240,176,64,0.12)", text: "#f0b040" },
+  "Auto Cashout": { bg: "rgba(240,176,64,0.12)", text: "#f0b040" },
+};
+const defaultFeatureColor = { bg: "rgba(124,107,245,0.12)", text: "var(--accent)" };
+function featureColor(f: string) { return FEATURE_COLORS[f] ?? defaultFeatureColor; }
+
 const AI_COLOR = (v: number | null | undefined): string => {
   if (v == null) return "#4b5563";
   if (v >= 7) return "#3dd68c";
@@ -398,7 +418,7 @@ export default function LibraryPage() {
                   </div>
                   <div className="flex flex-wrap gap-1 mb-3">
                     {features.slice(0, 3).map((f) => (
-                      <span key={f} className="rounded px-1.5 py-0.5 text-[9px] font-medium" style={{ background: "rgba(124,107,245,0.12)", color: "var(--accent)" }}>{f}</span>
+                      <span key={f} className="rounded px-1.5 py-0.5 text-[9px] font-medium" style={{ background: featureColor(f).bg, color: featureColor(f).text }}>{f}</span>
                     ))}
                     {features.length > 3 && <span className="text-[9px] px-1 py-0.5" style={{ color: "var(--text4)" }}>+{features.length - 3}</span>}
                   </div>
@@ -655,7 +675,7 @@ function GameRow({ game, idx, aiScore, features, isExpanded, isSelected, onToggl
         <td className="px-3 py-2">
           <div className="flex flex-wrap gap-1">
             {features.slice(0, 3).map((f) => (
-              <span key={f} className="rounded px-1.5 py-0.5 text-[9px] font-medium" style={{ background: "rgba(124,107,245,0.12)", color: "var(--accent)" }}>{f}</span>
+              <span key={f} className="rounded px-1.5 py-0.5 text-[9px] font-medium" style={{ background: featureColor(f).bg, color: featureColor(f).text }}>{f}</span>
             ))}
             {features.length > 3 && <span className="text-[9px] px-1 py-0.5" style={{ color: "var(--text4)" }}>+{features.length - 3}</span>}
           </div>
@@ -792,7 +812,7 @@ function SidePanel({ game, tab, onTabChange, onClose, onOpenWizard }: {
                 <p className="text-[10px] font-semibold uppercase tracking-widest mb-2" style={{ color: "var(--text4)" }}>Features</p>
                 <div className="flex flex-wrap gap-1.5">
                   {features.length > 0 ? features.map((f) => (
-                    <span key={f} className="rounded px-2 py-1 text-[11px] font-medium" style={{ background: "rgba(124,107,245,0.12)", color: "var(--accent)" }}>{f}</span>
+                    <span key={f} className="rounded px-2 py-1 text-[11px] font-medium" style={{ background: featureColor(f).bg, color: featureColor(f).text }}>{f}</span>
                   )) : (
                     <span className="text-[11px]" style={{ color: "var(--text4)" }}>None</span>
                   )}

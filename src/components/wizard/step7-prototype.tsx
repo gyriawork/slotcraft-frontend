@@ -327,14 +327,14 @@ export function Step7Prototype({ step1, step2, step3, step5, data, onUpdate, onB
   }
 
   return (
-    <div className="mx-auto max-w-4xl space-y-4">
+    <div className="space-y-4">
       {/* Configuration panel (collapsible) */}
-      <div className="rounded-lg border" style={{ background: "var(--bg2)", borderColor: "var(--border)" }}>
+      <div className="section-card !p-0">
         <button
           onClick={() => setShowConfig(!showConfig)}
           className="flex items-center justify-between w-full px-4 py-2.5 text-left"
         >
-          <span className="text-[12px] font-semibold uppercase tracking-wider" style={{ color: "var(--text3)" }}>
+          <span className="section-title" style={{ marginBottom: 0 }}>
             Configuration
           </span>
           <span className="text-[10px]" style={{ color: "var(--text3)" }}>{showConfig ? "▲" : "▼"}</span>
@@ -506,9 +506,9 @@ export function Step7Prototype({ step1, step2, step3, step5, data, onUpdate, onB
       </div>
 
       {/* Director Mode */}
-      <div className="rounded-lg border" style={{ background: "var(--bg2)", borderColor: "var(--border)" }}>
+      <div className="section-card !p-0">
         <div className="flex items-center justify-between px-4 py-2.5">
-          <span className="text-[12px] font-semibold uppercase tracking-wider" style={{ color: "var(--text3)" }}>
+          <span className="section-title" style={{ marginBottom: 0 }}>
             Director Mode
           </span>
           <button onClick={() => setShowLog(!showLog)} className="text-[11px]" style={{ color: "var(--accent)" }}>
@@ -585,13 +585,11 @@ export function Step7Prototype({ step1, step2, step3, step5, data, onUpdate, onB
       {/* Save & navigation */}
       <div className="flex justify-between">
         <button onClick={onBack}
-          className="rounded-md border px-4 py-2 text-[12px] font-medium transition-colors"
-          style={{ borderColor: "var(--border)", color: "var(--text2)", background: "var(--bg3)" }}>
+          className="btn btn-secondary">
           Back to Step 6
         </button>
         <button onClick={() => onUpdate({ ...config, view_type: "designer" })}
-          className="rounded-md px-6 py-2 text-[12px] font-medium text-white transition-colors"
-          style={{ background: "var(--accent)" }}>
+          className="btn btn-solid btn-lg">
           Save & Continue
         </button>
       </div>

@@ -11,8 +11,13 @@ interface WizardStepBarProps {
 export function WizardStepBar({ currentStep, completedSteps, onStepClick }: WizardStepBarProps) {
   return (
     <div
-      className="flex h-[44px] shrink-0 items-center overflow-x-auto px-6 border-b"
-      style={{ background: "var(--bg2)", borderColor: "var(--border)" }}
+      className="flex h-[44px] shrink-0 items-center overflow-x-auto px-4 border-b scrollbar-hide"
+      style={{
+        background: "var(--bg2)",
+        borderColor: "var(--border)",
+        maskImage: "linear-gradient(to right, transparent 0, black 12px, black calc(100% - 12px), transparent 100%)",
+        WebkitMaskImage: "linear-gradient(to right, transparent 0, black 12px, black calc(100% - 12px), transparent 100%)",
+      }}
     >
       {WIZARD_STEPS.map((step, i) => {
         const isActive = currentStep === step.number;
@@ -37,7 +42,7 @@ export function WizardStepBar({ currentStep, completedSteps, onStepClick }: Wiza
             {/* Step item */}
             <button
               onClick={() => onStepClick(step.number)}
-              className="flex items-center gap-[7px] rounded-md px-3.5 py-1.5 text-[12.5px] whitespace-nowrap transition-all duration-100"
+              className="flex items-center gap-[6px] rounded-md px-2.5 py-1.5 text-[11.5px] whitespace-nowrap transition-all duration-100"
               style={{
                 background: isActive ? "var(--accent-soft)" : "transparent",
                 color: isActive

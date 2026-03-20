@@ -100,10 +100,10 @@ export function Step2Volatility({ data, onUpdate, onBack }: Step2Props) {
   }
 
   return (
-    <div className="mx-auto max-w-3xl space-y-8">
+    <div className="space-y-4">
       {/* Target RTP */}
-      <section>
-        <h3 className="text-sm font-semibold text-gray-900 mb-3">
+      <section className="section-card">
+        <h3 className="section-title" style={{ textTransform: "none", letterSpacing: "normal" }}>
           Target RTP: <span className="font-mono">{rtp.toFixed(1)}%</span>
         </h3>
         <div className="flex flex-wrap gap-2 mb-3">
@@ -142,8 +142,8 @@ export function Step2Volatility({ data, onUpdate, onBack }: Step2Props) {
       </section>
 
       {/* Volatility */}
-      <section>
-        <h3 className="text-sm font-semibold text-gray-900 mb-3">Volatility</h3>
+      <section className="section-card">
+        <h3 className="section-title">Volatility</h3>
         <div className="grid grid-cols-3 gap-2 sm:grid-cols-6">
           {VOLATILITY_LEVELS.map((v) => (
             <button
@@ -163,8 +163,8 @@ export function Step2Volatility({ data, onUpdate, onBack }: Step2Props) {
       </section>
 
       {/* Hit Frequency */}
-      <section>
-        <h3 className="text-sm font-semibold text-gray-900 mb-3">
+      <section className="section-card">
+        <h3 className="section-title" style={{ textTransform: "none", letterSpacing: "normal" }}>
           Hit Frequency: <span className="font-mono">{hitFreq}%</span>
         </h3>
         <input
@@ -188,8 +188,8 @@ export function Step2Volatility({ data, onUpdate, onBack }: Step2Props) {
       </section>
 
       {/* Max Win */}
-      <section>
-        <h3 className="text-sm font-semibold text-gray-900 mb-3">
+      <section className="section-card">
+        <h3 className="section-title" style={{ textTransform: "none", letterSpacing: "normal" }}>
           Max Win: <span className="font-mono">{maxWin.toLocaleString()}x</span>
         </h3>
         <div className="flex flex-wrap gap-2 mb-3">
@@ -223,8 +223,8 @@ export function Step2Volatility({ data, onUpdate, onBack }: Step2Props) {
       </section>
 
       {/* Bonus Frequency */}
-      <section>
-        <h3 className="text-sm font-semibold text-gray-900 mb-3">
+      <section className="section-card">
+        <h3 className="section-title" style={{ textTransform: "none", letterSpacing: "normal" }}>
           Bonus Frequency: <span className="font-mono">1/{bonusFreq}</span> spins
         </h3>
         <input
@@ -249,8 +249,8 @@ export function Step2Volatility({ data, onUpdate, onBack }: Step2Props) {
 
       {/* Conflict Warnings */}
       {conflicts.length > 0 && (
-        <section>
-          <h3 className="text-sm font-semibold text-red-700 mb-2">Configuration Conflicts</h3>
+        <section className="section-card">
+          <h3 className="section-title" style={{ color: "var(--red, #dc2626)" }}>Configuration Conflicts</h3>
           {conflicts.map((c) => (
             <Hint key={c} level="danger">{c}</Hint>
           ))}
@@ -261,13 +261,13 @@ export function Step2Volatility({ data, onUpdate, onBack }: Step2Props) {
       <div className="flex justify-between border-t border-gray-200 pt-6">
         <button
           onClick={onBack}
-          className="rounded-md border border-gray-300 bg-white px-6 py-2.5 text-sm font-medium text-gray-700 hover:bg-gray-50 transition-colors"
+          className="btn btn-secondary"
         >
           Back
         </button>
         <button
           onClick={handleSave}
-          className="rounded-md bg-blue-600 px-6 py-2.5 text-sm font-medium text-white hover:bg-blue-700 transition-colors"
+          className="btn btn-solid btn-lg"
         >
           Save & Continue
         </button>
