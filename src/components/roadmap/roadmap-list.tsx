@@ -98,22 +98,17 @@ export function RoadmapList({ games, year }: RoadmapListProps) {
                           <div className="text-[13px] font-medium" style={{ color: "var(--text)" }}>
                             {game.name}
                           </div>
-                          <div className="flex flex-wrap gap-2 mt-0.5 text-[11px]" style={{ color: "var(--text3)" }}>
+                          <div className="flex flex-wrap items-center gap-1.5 mt-0.5 text-[11px]" style={{ color: "var(--text3)" }}>
                             <span
                               className="rounded-lg px-2 py-px text-[10px] font-medium"
                               style={{ background: typeCfg.badgeBg, color: typeCfg.badgeColor }}
                             >
                               {game.type}
                             </span>
-                            <span
-                              className="rounded-lg px-2 py-px text-[10px]"
-                              style={{ background: teamCfg.bg, color: teamCfg.color }}
-                            >
-                              {game.team}
-                            </span>
-                            <span>{game.rtp} RTP</span>
-                            {game.volatility !== "\u2014" && <span>{game.volatility} vol</span>}
-                            <span>Step {game.wizardStep}</span>
+                            <span style={{ color: "var(--border)", fontSize: "8px" }}>&middot;</span>
+                            <span>{game.createdBy && game.createdBy !== "\u2014" ? game.createdBy : ""}</span>
+                            <span style={{ color: "var(--border)", fontSize: "8px" }}>&middot;</span>
+                            <span>{game.team !== "\u2014" ? game.team : ""}</span>
                           </div>
                         </div>
 
@@ -149,13 +144,7 @@ export function RoadmapList({ games, year }: RoadmapListProps) {
                     );
                   })}
 
-                  {/* Add game placeholder */}
-                  <div
-                    className="flex items-center justify-center gap-1.5 rounded-lg border-[1.5px] border-dashed px-2.5 py-2.5 text-[12px] cursor-pointer transition-colors mb-1.5"
-                    style={{ borderColor: "var(--border)", color: "var(--text3)" }}
-                  >
-                    + Add game to {monthName}
-                  </div>
+                  {/* Games are added automatically when dates are set in Projects */}
                 </div>
               );
             })}

@@ -18,7 +18,7 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "SlotCraft",
+  title: "ReelSpec",
   description: "SaaS platform for iGaming game design",
 };
 

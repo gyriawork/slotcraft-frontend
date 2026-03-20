@@ -29,7 +29,7 @@ export default function SharedProjectPage() {
   const [commentBody, setCommentBody] = useState("");
   const [authorName, setAuthorName] = useState(() => {
     if (typeof window !== "undefined") {
-      return localStorage.getItem("slotcraft_author_name") ?? "";
+      return localStorage.getItem("reelspec_author_name") ?? "";
     }
     return "";
   });
@@ -59,7 +59,7 @@ export default function SharedProjectPage() {
     if (!data || !commentBody.trim() || !authorName.trim()) return;
     setSubmitting(true);
     try {
-      localStorage.setItem("slotcraft_author_name", authorName.trim());
+      localStorage.setItem("reelspec_author_name", authorName.trim());
       const comment = await api.comments.create(data.project.id, {
         step: activeStep,
         author_name: authorName.trim(),
@@ -107,7 +107,7 @@ export default function SharedProjectPage() {
       <div className="border-b border-gray-200 bg-white">
         <div className="mx-auto flex max-w-5xl items-center justify-between px-6 py-4">
           <div>
-            <p className="text-xs font-medium text-blue-600">SlotCraft — Shared Project</p>
+            <p className="text-xs font-medium text-blue-600">ReelSpec — Shared Project</p>
             <h1 className="text-xl font-bold text-gray-900">{project.name}</h1>
             <p className="mt-0.5 text-xs text-gray-500">
               {project.game_type} &middot; {project.status} &middot; {permission === "comment" ? "View + Comment" : "View only"}

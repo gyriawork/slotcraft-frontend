@@ -180,15 +180,9 @@ export function Topbar() {
         style={{ background: "var(--bg2)", borderColor: "var(--border)", zIndex: 100 }}
       >
         {/* Logo */}
-        <Link href="/dashboard" className="flex items-center gap-2 mr-2 shrink-0">
-          <div
-            className="flex h-[34px] w-[34px] shrink-0 items-center justify-center rounded-lg text-[13px] font-semibold text-white"
-            style={{ background: "linear-gradient(135deg, #7c6bf5, #c084fc)" }}
-          >
-            SW
-          </div>
-          <span className="text-[16px] font-semibold tracking-tight" style={{ color: "var(--text)" }}>
-            SLOT<span style={{ color: "var(--accent)" }}>WISE</span>
+        <Link href="/games" className="mr-2 shrink-0">
+          <span className="text-[22px] font-black tracking-tight" style={{ color: "var(--text)" }}>
+            REEL<span style={{ color: "var(--accent)" }}>SPEC</span>
           </span>
         </Link>
 

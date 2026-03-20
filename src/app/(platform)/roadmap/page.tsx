@@ -8,7 +8,6 @@ import {
   SAMPLE_ROADMAP_GAMES,
   mergeToRoadmap,
   type GameType,
-  type ViewMode,
   type RoadmapGame,
 } from "@/components/roadmap/roadmap-types";
 
@@ -30,7 +29,7 @@ const STATUS_FILTERS: Array<{ key: string; label: string }> = [
 
 export default function RoadmapPage() {
   const [year, setYear] = useState(currentYear);
-  const [view, setView] = useState<ViewMode>("gantt");
+  // Single view: Gantt on top + List by quarter below
   const [activeTypes, setActiveTypes] = useState<Set<GameType>>(new Set(["slot", "crash", "table"]));
   const [activeTeams, setActiveTeams] = useState<Set<string>>(new Set());
   const [statusFilter, setStatusFilter] = useState("all");
@@ -248,22 +247,14 @@ export default function RoadmapPage() {
             ))}
           </div>
 
-          {/* View toggle + count */}
-          <div className="flex items-center justify-between mb-3">
-            <div className="flex overflow-hidden rounded-md border" style={{ borderColor: "var(--border)" }}>
-              <ViewButton active={view === "gantt"} onClick={() => setView("gantt")}>
-                Gantt chart
-              </ViewButton>
-              <ViewButton active={view === "list"} onClick={() => setView("list")}>
-                List by quarter
-              </ViewButton>
-            </div>
+          {/* Count */}
+          <div className="flex items-center justify-end mb-3">
             <div className="text-[11px]" style={{ color: "var(--text3)" }}>
               Showing {filtered.length} of {allGames.length} games
             </div>
           </div>
 
-          {/* Views */}
+          {/* Views: Gantt on top, List by quarter below */}
           {loading ? (
             <div
               className="flex items-center justify-center rounded-xl border py-20"
@@ -273,8 +264,11 @@ export default function RoadmapPage() {
             </div>
           ) : (
             <>
-              {view === "gantt" && <GanttChart games={filtered} currentMonth={currentMonth} />}
-              {view === "list" && <RoadmapList games={filtered} year={year} />}
+              <GanttChart games={filtered} currentMonth={currentMonth} />
+              <div className="mt-6">
+                <h2 className="text-[15px] font-semibold mb-3" style={{ color: "var(--text)" }}>By Quarter</h2>
+                <RoadmapList games={filtered} year={year} />
+              </div>
             </>
           )}
         </div>
@@ -336,27 +330,3 @@ function FilterChip({
   );
 }
 
-function ViewButton({
-  children,
-  active,
-  onClick,
-}: {
-  children: React.ReactNode;
-  active: boolean;
-  onClick: () => void;
-}) {
-  return (
-    <button
-      onClick={onClick}
-      className="border-r px-4 py-1.5 text-[12px] transition-colors last:border-r-0"
-      style={{
-        borderColor: "var(--border)",
-        background: active ? "var(--accent-soft)" : "var(--bg2)",
-        color: active ? "var(--accent)" : "var(--text3)",
-        fontWeight: active ? 500 : 400,
-      }}
-    >
-      {children}
-    </button>
-  );
-}

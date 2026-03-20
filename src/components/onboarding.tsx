@@ -62,7 +62,7 @@ export function Onboarding({ onDismiss }: Props) {
         <div className="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-2xl bg-blue-100 text-3xl">
           🎰
         </div>
-        <h2 className="text-2xl font-bold text-gray-900">Welcome to SlotCraft</h2>
+        <h2 className="text-2xl font-bold text-gray-900">Welcome to ReelSpec</h2>
         <p className="mt-2 text-sm text-gray-500 max-w-md mx-auto">
           Design casino games from concept to production. Get started by exploring a sample
           project or creating your own from scratch.

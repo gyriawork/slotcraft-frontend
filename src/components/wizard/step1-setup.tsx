@@ -142,7 +142,7 @@ export function Step1Setup({ data, onUpdate, projectId, projectDates }: Step1Set
       api.projects.update(projectId, {
         development_start: dates.development_start || null,
         development_end: dates.development_end || null,
-        tech_release: dates.tech_release || null,
+        tech_release: dates.development_end || null,
         pre_release: dates.pre_release || null,
         marketing_release: dates.marketing_release || null,
       }).catch(() => { /* silently fail — dates are secondary */ });
@@ -151,6 +151,30 @@ export function Step1Setup({ data, onUpdate, projectId, projectDates }: Step1Set
 
   return (
     <div className="mx-auto max-w-3xl space-y-8">
+      {/* Project Timeline — shown first */}
+      <section>
+        <h3 className="text-sm font-semibold text-gray-900 mb-3">Project Timeline</h3>
+        <div className="grid grid-cols-2 gap-4">
+          {([
+            ["development_start", "Development start"],
+            ["development_end", "Development end"],
+            ["pre_release", "Pre-release"],
+            ["marketing_release", "Marketing release"],
+          ] as const).map(([key, label]) => (
+            <div key={key}>
+              <label className="block text-xs text-gray-500 mb-1">{label}</label>
+              <input
+                type="date"
+                value={dates[key]}
+                onChange={(e) => setDates((d) => ({ ...d, [key]: e.target.value }))}
+                className="w-full rounded-md border border-gray-300 px-3 py-2 text-sm"
+                style={{ colorScheme: "dark" }}
+              />
+            </div>
+          ))}
+        </div>
+      </section>
+
       {/* Game Type */}
       <section>
         <h3 className="text-sm font-semibold text-gray-900 mb-3">Game Type</h3>
@@ -323,7 +347,7 @@ export function Step1Setup({ data, onUpdate, projectId, projectDates }: Step1Set
 
           {/* Bet Range */}
           <section>
-            <h3 className="text-sm font-semibold text-gray-900 mb-3">Bet Range</h3>
+            <h3 className="text-sm font-semibold text-gray-900 mb-3">Bet Range ({(() => { try { const s = typeof window !== "undefined" ? localStorage.getItem("reelspec_settings") : null; return s ? JSON.parse(s).baseCurrency || "EUR" : "EUR"; } catch { return "EUR"; } })()})</h3>
             <div className="grid grid-cols-3 gap-4">
               <div>
                 <label className="block text-xs text-gray-500 mb-1">Min Bet</label>
@@ -415,31 +439,6 @@ export function Step1Setup({ data, onUpdate, projectId, projectDates }: Step1Set
             </div>
           );
         })}
-      </section>
-
-      {/* Project Timeline */}
-      <section>
-        <h3 className="text-sm font-semibold text-gray-900 mb-3">Project Timeline</h3>
-        <div className="grid grid-cols-2 gap-4">
-          {([
-            ["development_start", "Development start"],
-            ["development_end", "Development end"],
-            ["tech_release", "Tech release"],
-            ["pre_release", "Pre-release"],
-            ["marketing_release", "Marketing release"],
-          ] as const).map(([key, label]) => (
-            <div key={key}>
-              <label className="block text-xs text-gray-500 mb-1">{label}</label>
-              <input
-                type="date"
-                value={dates[key]}
-                onChange={(e) => setDates((d) => ({ ...d, [key]: e.target.value }))}
-                className="w-full rounded-md border border-gray-300 px-3 py-2 text-sm"
-                style={{ colorScheme: "dark" }}
-              />
-            </div>
-          ))}
-        </div>
       </section>
 
       {/* Save / Continue */}

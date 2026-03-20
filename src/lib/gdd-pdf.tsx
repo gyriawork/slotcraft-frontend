@@ -162,7 +162,7 @@ export function GddPdfDocument({
   const audienceLabel = AUDIENCE_LABELS[audience].label;
 
   return (
-    <Document title={`${gameName} — GDD`} author="SlotCraft">
+    <Document title={`${gameName} — GDD`} author="ReelSpec">
       {/* Cover Page */}
       <Page size="A4" style={styles.coverPage}>
         <View style={{ marginTop: 200 }}>
@@ -188,7 +188,7 @@ export function GddPdfDocument({
         ))}
         <View style={styles.footer}>
           <Text>{gameName} — {audienceLabel}</Text>
-          <Text>SlotCraft</Text>
+          <Text>ReelSpec</Text>
         </View>
       </Page>
 

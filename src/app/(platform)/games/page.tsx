@@ -117,10 +117,10 @@ function sortProjects(list: Project[], sort: SortMode): Project[] {
   }
 }
 
-function getSettingsField(field: "displayName" | "teamName", fallback: string): string {
+function getSettingsField(field: "displayName" | "teamName" | "studioName", fallback: string): string {
   if (typeof window === "undefined") return fallback;
   try {
-    const raw = localStorage.getItem("slotcraft_settings");
+    const raw = localStorage.getItem("reelspec_settings");
     if (raw) { const s = JSON.parse(raw); return s[field] || fallback; }
   } catch { /* ignore */ }
   return fallback;
@@ -138,10 +138,11 @@ export default function GamesPage() {
   const [error, setError] = useState<string | null>(null);
   const [showCreate, setShowCreate] = useState(false);
   const [newName, setNewName] = useState("");
-  const [newType, setNewType] = useState<"slot" | "crash" | "table">("slot");
+  const [newBrand, setNewBrand] = useState("");
   const [creating, setCreating] = useState(false);
   const [showDates, setShowDates] = useState(false);
   const [newDates, setNewDates] = useState<{ development_start: string; development_end: string; tech_release: string; pre_release: string; marketing_release: string }>({ development_start: "", development_end: "", tech_release: "", pre_release: "", marketing_release: "" });
+  const [brands, setBrands] = useState<Array<{ id: string; name: string }>>([]);
   const [search, setSearch] = useState("");
   const [filterType, setFilterType] = useState<"all" | "slot" | "crash" | "table">("all");
   const [filterStatus, setFilterStatus] = useState<"all" | "draft" | "active" | "archived">("all");
@@ -161,6 +162,10 @@ export default function GamesPage() {
 
   useEffect(() => {
     fetchProjects();
+    try {
+      const raw = localStorage.getItem("reelspec_brands");
+      if (raw) setBrands(JSON.parse(raw));
+    } catch { /* ignore */ }
   }, [fetchProjects]);
 
   const handleCreate = useCallback(async () => {
@@ -169,14 +174,19 @@ export default function GamesPage() {
     try {
       const created = await api.projects.create({
         name: newName.trim(),
-        game_type: newType,
+        game_type: "slot" as const,
         development_start: newDates.development_start || null,
         development_end: newDates.development_end || null,
         tech_release: newDates.tech_release || null,
         pre_release: newDates.pre_release || null,
         marketing_release: newDates.marketing_release || null,
       });
+      // Store brand in step_data if selected
+      if (newBrand) {
+        try { await api.projects.update(created.id, { step_data: { ...created.step_data, brand: newBrand } }); } catch { /* ignore */ }
+      }
       setNewName("");
+      setNewBrand("");
       setNewDates({ development_start: "", development_end: "", tech_release: "", pre_release: "", marketing_release: "" });
       setShowDates(false);
       setShowCreate(false);
@@ -186,7 +196,7 @@ export default function GamesPage() {
     } finally {
       setCreating(false);
     }
-  }, [newName, newType, newDates, creating, router]);
+  }, [newName, newBrand, newDates, creating, router]);
 
   /* ── derived data ── */
   const filtered = useMemo(() => {
@@ -294,6 +304,17 @@ export default function GamesPage() {
               onKeyDown={(e) => e.key === "Enter" && handleCreate()}
               autoFocus
             />
+            {brands.length > 0 && (
+              <select
+                value={newBrand}
+                onChange={(e) => setNewBrand(e.target.value)}
+                className="rounded-md border px-3 py-2 text-[12px]"
+                style={{ background: "var(--bg3)", borderColor: "var(--border)", color: "var(--text)" }}
+              >
+                <option value="">Brand</option>
+                {brands.map((b) => <option key={b.id} value={b.name}>{b.name}</option>)}
+              </select>
+            )}
             <button
               onClick={handleCreate}
               disabled={!newName.trim() || creating}
@@ -395,7 +416,7 @@ export default function GamesPage() {
           <table className="w-full border-collapse text-[12px]">
             <thead>
               <tr>
-                {["Name", "Type", "RTP", "Vol", "Release", "Updated", "Created by", "Team", "Status"].map((col) => (
+                {["Name", "Brand", "Type", "RTP", "Vol", "Release", "Updated", "Created by", "Team", "Status"].map((col) => (
                   <th
                     key={col}
                     className="text-left px-3 py-2.5 font-semibold text-[11px] border-b whitespace-nowrap"
@@ -420,6 +441,9 @@ export default function GamesPage() {
                   >
                     <td className="px-3 py-2.5 font-medium border-b" style={{ color: "var(--text)", borderColor: "var(--border)" }}>
                       {project.name}
+                    </td>
+                    <td className="px-3 py-2.5 border-b" style={{ color: "var(--text2)", borderColor: "var(--border)" }}>
+                      {(project.step_data as Record<string, unknown>)?.brand as string ?? getSettingsField("studioName", "\u2014")}
                     </td>
                     <td className="px-3 py-2.5 border-b" style={{ color: "var(--text2)", borderColor: "var(--border)" }}>
                       {project.game_type}

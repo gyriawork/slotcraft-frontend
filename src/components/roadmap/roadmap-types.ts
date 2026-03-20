@@ -29,6 +29,8 @@ export interface RoadmapGame {
   source: "library" | "project" | "sample";
   /** Year the game's dates belong to */
   year: number;
+  /** Who created this game */
+  createdBy?: string;
 }
 
 /* ─── Converters: real data → RoadmapGame ─── */
@@ -155,11 +157,25 @@ export function projectToRoadmap(project: Project): RoadmapGame {
   const rtp = step2?.target_rtp ? `${step2.target_rtp}%` : "\u2014";
   const volatility = (step2?.volatility as string) ?? "\u2014";
 
+  // Get created_by and team from settings
+  let createdBy = "\u2014";
+  let teamName = "\u2014";
+  if (typeof window !== "undefined") {
+    try {
+      const raw = localStorage.getItem("reelspec_settings");
+      if (raw) {
+        const s = JSON.parse(raw);
+        createdBy = s.displayName || "\u2014";
+        teamName = s.teamName || "\u2014";
+      }
+    } catch { /* ignore */ }
+  }
+
   return {
     id: project.id,
     name: project.name,
     type: project.game_type,
-    team: "\u2014",
+    team: teamName,
     status: mapProjectStatus(project.status, completedSteps, totalSteps),
     rtp,
     volatility,
@@ -172,6 +188,7 @@ export function projectToRoadmap(project: Project): RoadmapGame {
     wizardStep: `${completedSteps}/${totalSteps}`,
     source: "project",
     year: techD.getFullYear(),
+    createdBy,
   };
 }
 

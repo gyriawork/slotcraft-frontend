@@ -13,7 +13,7 @@ const TYPE_GRADIENTS: Record<string, string> = {
 };
 const TYPE_LETTER: Record<string, string> = { slot: "S", crash: "C", table: "T" };
 
-const TABS = ["Promotion pack", "Game assets", "Screenshots", "Product sheet", "Marketing copy"];
+const TABS = ["Promotion pack", "Game assets", "Screenshots", "Product sheet", "Copywriting"];
 
 /* ── Promotion Pack data ── */
 
@@ -794,7 +794,7 @@ export default function MarketingPage() {
                 style={{ height: 220, background: "linear-gradient(135deg, #1a0f2e, #2d1854)" }}
               >
                 <div className="absolute top-3 left-3 text-[12px]" style={{ color: "rgba(255,255,255,.7)" }}>
-                  SLOTWISE Studio
+                  REELSPEC Studio
                 </div>
                 {psFeatures.some((f) => f.name === "BONUS BUY") && (
                   <div className="absolute top-3 right-3 px-3.5 py-1.5 rounded-md text-[11px] font-semibold text-white" style={{ background: "#00a0ff" }}>

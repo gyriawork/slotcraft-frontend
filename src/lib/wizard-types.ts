@@ -87,7 +87,7 @@ export interface Step2Data {
 }
 
 /** Feature types */
-export type FeatureType = "wild" | "bonus" | "enhancer" | "gamble";
+export type FeatureType = "wild" | "bonus" | "enhancer" | "gamble" | "custom";
 
 export type WildVariant =
   | "standard"
@@ -119,7 +119,8 @@ export type FeatureVariant =
   | WildVariant
   | BonusVariant
   | EnhancerVariant
-  | GambleVariant;
+  | GambleVariant
+  | (string & {});  // allow custom variant strings
 
 export interface FeatureItem {
   type: FeatureType;

@@ -48,12 +48,32 @@ const FEATURE_CATALOG: FeatureDef[] = [
   { type: "gamble", variant: "ladder", label: "Ladder", description: "Climb a prize ladder with risk/collect choices", complexity: 2 },
 ];
 
-const CATEGORY_LABELS: Record<FeatureType, string> = {
+const CATEGORY_LABELS: Record<string, string> = {
   wild: "Wilds",
   bonus: "Bonus Rounds",
   enhancer: "Enhancers",
   gamble: "Gamble",
+  custom: "Custom",
 };
+
+/** Load custom features from Settings → Features Library */
+function loadCustomFeatures(): FeatureDef[] {
+  if (typeof window === "undefined") return [];
+  try {
+    const raw = localStorage.getItem("reelspec_features");
+    if (raw) {
+      const items = JSON.parse(raw) as Array<{ type: string; variant: string; label: string; description: string; complexity: number }>;
+      return items.map((f) => ({
+        type: f.type as FeatureType,
+        variant: f.variant as FeatureVariant,
+        label: f.label,
+        description: f.description,
+        complexity: f.complexity,
+      }));
+    }
+  } catch { /* ignore */ }
+  return [];
+}
 
 /** Map of features restricted by market constraints */
 const MARKET_FEATURE_RESTRICTIONS: Record<string, { market: string; feature: FeatureVariant; reason: string }[]> = {};
@@ -99,6 +119,12 @@ export function Step3Features({ data, onUpdate, onBack, markets = [], marketCons
   );
   const [expandedVariant, setExpandedVariant] = useState<FeatureVariant | null>(null);
 
+  // Merge built-in catalog with custom features from Settings
+  const fullCatalog = useMemo(() => {
+    const custom = loadCustomFeatures();
+    return [...FEATURE_CATALOG, ...custom];
+  }, []);
+
   function isSelected(variant: FeatureVariant) {
     return selected.some((f) => f.variant === variant);
   }
@@ -126,10 +152,10 @@ export function Step3Features({ data, onUpdate, onBack, markets = [], marketCons
 
   const complexity = useMemo(() => {
     return selected.reduce((sum, f) => {
-      const def = FEATURE_CATALOG.find((d) => d.variant === f.variant);
+      const def = fullCatalog.find((d) => d.variant === f.variant);
       return sum + (def?.complexity ?? 1);
     }, 0);
-  }, [selected]);
+  }, [selected, fullCatalog]);
 
   const devWeeks = useMemo(() => {
     if (complexity <= 4) return 2;
@@ -147,13 +173,17 @@ export function Step3Features({ data, onUpdate, onBack, markets = [], marketCons
     });
   }
 
-  const categories: FeatureType[] = ["wild", "bonus", "enhancer", "gamble"];
+  const categories = useMemo(() => {
+    const base: string[] = ["wild", "bonus", "enhancer", "gamble"];
+    const hasCustom = fullCatalog.some((f) => f.type === "custom");
+    return hasCustom ? [...base, "custom"] : base;
+  }, [fullCatalog]);
 
   return (
     <div className="mx-auto max-w-3xl space-y-8">
       {/* Feature categories */}
       {categories.map((cat) => {
-        const features = FEATURE_CATALOG.filter((f) => f.type === cat);
+        const features = fullCatalog.filter((f) => f.type === cat);
         return (
           <section key={cat}>
             <h3 className="text-sm font-semibold mb-3" style={{ color: "var(--text)" }}>

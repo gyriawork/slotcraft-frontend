@@ -38,7 +38,7 @@ export function CommentPanel({ projectId, currentStep, open, onClose }: CommentP
   const [newComment, setNewComment] = useState("");
   const [authorName, setAuthorName] = useState(() => {
     if (typeof window !== "undefined") {
-      return localStorage.getItem("slotcraft_author_name") ?? "";
+      return localStorage.getItem("reelspec_author_name") ?? "";
     }
     return "";
   });
@@ -67,7 +67,7 @@ export function CommentPanel({ projectId, currentStep, open, onClose }: CommentP
     if (!newComment.trim() || !authorName.trim()) return;
     setSubmitting(true);
     try {
-      localStorage.setItem("slotcraft_author_name", authorName.trim());
+      localStorage.setItem("reelspec_author_name", authorName.trim());
       await api.comments.create(projectId, {
         step: filterStep === "all" ? currentStep : filterStep,
         author_name: authorName.trim(),

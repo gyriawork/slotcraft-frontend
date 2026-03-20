@@ -212,7 +212,7 @@ export default function LibraryPage() {
     let createdBy = "Unknown";
     let teamName = "";
     try {
-      const raw = localStorage.getItem("slotcraft_settings");
+      const raw = localStorage.getItem("reelspec_settings");
       if (raw) { const s = JSON.parse(raw); createdBy = s.displayName || "Unknown"; teamName = s.teamName || ""; }
     } catch { /* ignore */ }
     try {
