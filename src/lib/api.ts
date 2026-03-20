@@ -17,11 +17,25 @@ export interface Project {
   marketing_release?: string | null;
 }
 
+function getAnthropicKey(): string | null {
+  if (typeof window === "undefined") return null;
+  try {
+    const raw = localStorage.getItem("reelspec_settings");
+    if (raw) { const s = JSON.parse(raw); return s.anthropicApiKey || null; }
+  } catch { /* ignore */ }
+  return null;
+}
+
 async function request<T>(path: string, init?: RequestInit): Promise<T> {
+  const extraHeaders: Record<string, string> = {};
+  const apiKey = getAnthropicKey();
+  if (apiKey) extraHeaders["x-anthropic-key"] = apiKey;
+
   const res = await fetch(`${API_BASE}${path}`, {
     ...init,
     headers: {
       "Content-Type": "application/json",
+      ...extraHeaders,
       ...init?.headers,
     },
   });
